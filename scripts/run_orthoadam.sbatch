@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=xai-orthoadam
-#SBATCH --gres=gpu:p100:1
+#SBATCH --partition=P100
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=36:00:00

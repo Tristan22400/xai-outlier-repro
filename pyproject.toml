@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xai-outlier-repro"
+version = "0.1.0"
+description = "Reproducing softmax-1 and OrthoAdam on small GPT-2 to suppress activation outliers"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Tristan" }]
+dependencies = [
+    "torch==2.1.2",
+    "transformers>=4.40,<4.50",
+    "datasets>=2.18",
+    "accelerate>=0.29",
+    "evaluate>=0.4",
+    "wandb>=0.17",
+    "numpy<2",
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "black>=24.3",
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "types-PyYAML",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "N", "RUF"]
+ignore = ["E501"]  # black handles line length
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+warn_return_any = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = false  # HF / wandb public APIs are untyped
+check_untyped_defs = true
+no_implicit_optional = true
+plugins = []
+
+[[tool.mypy.overrides]]
+module = ["transformers.*", "datasets.*", "wandb.*", "evaluate.*", "accelerate.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

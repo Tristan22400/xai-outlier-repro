@@ -1,9 +1,9 @@
-"""Training entrypoint: ``python -m xai_repro.train --variant {...}``.
+"""Training entrypoint: ``python -m xai_repro.train --variant {baseline,softmax1,orthoadam}``.
 
 Runs the 60M GPT-2 on WikiText-103 for one of the three variants and
-logs everything to the ``xai-outlier-repro`` W&B project. Same
-hyperparameters for all three variants — the only knob that changes is
-which optimizer / attention module is plugged in.
+logs to the ``xai-outlier-repro`` W&B project.  The only difference
+between variants is the optimizer (OrthoAdam vs AdamW) and attention
+function (softmax-1 vs standard) — all hyperparameters are shared.
 """
 
 from __future__ import annotations
@@ -14,60 +14,56 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from transformers import (
-    Trainer,
-    TrainingArguments,
-)
+from transformers import Trainer, TrainingArguments
 
-from xai_repro.callbacks.mfu import MFUCallback
-from xai_repro.callbacks.walltime import WallclockStopCallback
-from xai_repro.data import load_wikitext103
+from xai_repro.callbacks import MFUCallback, WallclockStopCallback
+from xai_repro.data import load_c4
 from xai_repro.model import Variant, build_model, count_parameters, load_config
-from xai_repro.optim.ortho_adam import OrthoAdam
+from xai_repro.optim import OrthoAdam
 
 DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "gpt2_60m.yaml"
 
 
 class OrthoAdamTrainer(Trainer):
-    """HF Trainer subclass that uses OrthoAdam instead of AdamW."""
+    """HF Trainer subclass that substitutes OrthoAdam for AdamW."""
 
     def __init__(self, *args: Any, orthoadam_kwargs: dict[str, Any], **kwargs: Any) -> None:
-        self._orthoadam_kwargs = orthoadam_kwargs
+        self._oa_kwargs = orthoadam_kwargs
         super().__init__(*args, **kwargs)
 
     def create_optimizer(self) -> torch.optim.Optimizer:
         if self.optimizer is None:
-            decay_params: list[torch.nn.Parameter] = []
-            no_decay_params: list[torch.nn.Parameter] = []
             assert self.model is not None
+            decay, no_decay = [], []
             for name, p in self.model.named_parameters():
                 if not p.requires_grad:
                     continue
                 if p.ndim < 2 or name.endswith(".bias"):
-                    no_decay_params.append(p)
+                    no_decay.append(p)
                 else:
-                    decay_params.append(p)
-            groups = [
-                {"params": decay_params, "weight_decay": self.args.weight_decay},
-                {"params": no_decay_params, "weight_decay": 0.0},
-            ]
+                    decay.append(p)
             self.optimizer = OrthoAdam(
-                groups,
+                [
+                    {"params": decay, "weight_decay": self.args.weight_decay},
+                    {"params": no_decay, "weight_decay": 0.0},
+                ],
                 lr=self.args.learning_rate,
-                betas=(self.args.adam_beta1, self.args.adam_beta2),
+                betas=self._oa_kwargs.get("betas", (self.args.adam_beta1, self.args.adam_beta2)),
                 eps=self.args.adam_epsilon,
-                **self._orthoadam_kwargs,
+                **{k: v for k, v in self._oa_kwargs.items() if k != "betas"},
             )
         return self.optimizer
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Train one variant of the outlier reproduction.")
-    p.add_argument("--variant", choices=("baseline", "softmax1", "orthoadam"), required=True)
+    p.add_argument("--variant", choices=("baseline", "softmax1", "orthoadam", "softmax1_ortho", "vanilla_gpt2"), required=True)
     p.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     p.add_argument("--output_dir", type=Path, required=True)
-    p.add_argument("--max_steps", type=int, default=None, help="Override config max_steps.")
-    p.add_argument("--smoke", action="store_true", help="Short smoke run (200 steps).")
+    p.add_argument("--max_steps", type=int, default=None)
+    p.add_argument("--smoke", action="store_true", help="Short smoke-test run (200 steps).")
+    p.add_argument("--beta2", type=float, default=None, help="Override Adam beta2.")
+    p.add_argument("--run_name", type=str, default=None, help="Override W&B run name.")
     return p.parse_args()
 
 
@@ -76,22 +72,22 @@ def main() -> None:
     cfg = load_config(args.config)
     tcfg = cfg["training"]
 
-    max_steps = args.max_steps if args.max_steps is not None else tcfg["max_steps"]
+    max_steps = args.max_steps or tcfg["max_steps"]
     if args.smoke:
         max_steps = 200
 
     variant: Variant = args.variant
     model = build_model(variant, args.config)
     n_params = count_parameters(model)
-
-    data = load_wikitext103(seq_len=tcfg["seq_len"])
+    data = load_c4(seq_len=tcfg["seq_len"])
 
     tokens_per_step = (
-        tcfg["per_device_train_batch_size"] * tcfg["gradient_accumulation_steps"] * tcfg["seq_len"]
+        tcfg["per_device_train_batch_size"]
+        * tcfg["gradient_accumulation_steps"]
+        * tcfg["seq_len"]
     )
 
     os.environ.setdefault("WANDB_PROJECT", tcfg["wandb_project"])
-    run_name = f"{variant}-seed{tcfg['seed']}"
 
     training_args = TrainingArguments(
         output_dir=str(args.output_dir),
@@ -105,7 +101,7 @@ def main() -> None:
         warmup_steps=tcfg["warmup_steps"],
         weight_decay=tcfg["weight_decay"],
         adam_beta1=tcfg["adam_beta1"],
-        adam_beta2=tcfg["adam_beta2"],
+        adam_beta2=args.beta2 if args.beta2 is not None else tcfg["adam_beta2"],
         adam_epsilon=tcfg["adam_epsilon"],
         max_grad_norm=tcfg["max_grad_norm"],
         logging_steps=tcfg["logging_steps"],
@@ -119,7 +115,7 @@ def main() -> None:
         bf16=tcfg["bf16"],
         seed=tcfg["seed"],
         report_to=["wandb"],
-        run_name=run_name,
+        run_name=args.run_name or f"{variant}-v2-seed{tcfg['seed']}",
         dataloader_num_workers=2,
     )
 
@@ -128,27 +124,32 @@ def main() -> None:
         WallclockStopCallback(max_hours=tcfg["wallclock_hours"]),
     ]
 
-    trainer_cls: type[Trainer]
-    trainer_kwargs: dict[str, Any] = {
-        "model": model,
-        "args": training_args,
-        "train_dataset": data.train,
-        "eval_dataset": data.validation,
-        "data_collator": data.collator,
-        "tokenizer": data.tokenizer,
-        "callbacks": callbacks,
-    }
-    if variant == "orthoadam":
-        trainer_cls = OrthoAdamTrainer
-        trainer_kwargs["orthoadam_kwargs"] = {
-            "weight_decay": tcfg["weight_decay"],
-            "max_rotate_dim": cfg["orthoadam"]["max_rotate_dim"],
-            "seed": cfg["orthoadam"]["seed"],
-        }
-    else:
-        trainer_cls = Trainer
+    trainer_kwargs: dict[str, Any] = dict(
+        model=model,
+        args=training_args,
+        train_dataset=data.train,
+        eval_dataset=data.validation,
+        data_collator=data.collator,
+        tokenizer=data.tokenizer,
+        callbacks=callbacks,
+    )
 
-    trainer = trainer_cls(**trainer_kwargs)
+    if variant in ("orthoadam", "softmax1_ortho"):
+        # Override beta2 if provided
+        ortho_beta2 = args.beta2 if args.beta2 is not None else tcfg["adam_beta2"]
+        
+        trainer = OrthoAdamTrainer(
+            **trainer_kwargs,
+            orthoadam_kwargs={
+                "weight_decay": tcfg["weight_decay"],
+                "max_rotate_dim": cfg["orthoadam"]["max_rotate_dim"],
+                "seed": cfg["orthoadam"]["seed"],
+                "betas": (tcfg["adam_beta1"], ortho_beta2),
+            },
+        )
+    else:
+        trainer = Trainer(**trainer_kwargs)
+
     trainer.train()
     trainer.save_model(str(args.output_dir / "final"))
     metrics = trainer.evaluate()

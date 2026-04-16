@@ -1,70 +1,49 @@
-"""Per-channel activation kurtosis — the primary outlier diagnostic.
+"""Hidden-state kurtosis — the primary outlier diagnostic.
 
-An outlier feature is a channel of the residual stream whose
-pre-quantization distribution is extremely heavy-tailed. Excess kurtosis
+Implements the paper's Eq. 2 (Kaul et al., ICLR 2025, arXiv 2410.17174):
 
-    E[(x - mean)^4] / var^2 - 3
+    κ_{m,l} = E_d[(X_{m,l,d} − μ_{m,l})⁴] / E_d[(X_{m,l,d} − μ_{m,l})²]²
 
-is the standard summary statistic. A Gaussian has excess kurtosis 0; a
-"sink" channel in a stock GPT-2 can exceed several hundred. Both
-softmax-1 and OrthoAdam are claimed to cut this by 1-2 orders of
-magnitude while preserving validation perplexity.
+i.e. for each (layer m, token position l), the kurtosis is computed **across
+feature channels** of that single D-dimensional residual-stream vector.  We
+report raw kurtosis (Gaussian ≈ 3) so numbers are directly comparable to the
+paper's Table 2.  Means are partitioned into {first-token, rest, all} tokens.
+
+This is a thin CLI wrapper around ``HiddenStateStats`` in the
+``interpretability`` module so that the two analyses stay in lockstep.
 """
 
 from __future__ import annotations
 
 import argparse
-from collections.abc import Callable
 from pathlib import Path
 
 import torch
 import wandb
-from torch import Tensor, nn
 from torch.utils.data import DataLoader
 from transformers import GPT2LMHeadModel
 
-from xai_repro.data import load_wikitext103
+from xai_repro.analysis.interpretability import HiddenStateStats
+from xai_repro.data import load_c4
 from xai_repro.model import load_config
 
 
 @torch.no_grad()
-def collect_channel_stats(
+def collect_hidden_kurtosis(
     model: GPT2LMHeadModel,
     loader: DataLoader,
     device: torch.device,
     max_batches: int = 32,
-) -> dict[str, Tensor]:
-    """Collect per-channel mean / var / M4 for every block's residual output.
-
-    Uses running Welford-style accumulators to stay O(d) in memory.
-    """
-    d = model.config.n_embd
-    n_layers = model.config.n_layer
-    count = torch.zeros(n_layers, device=device)
-    mean = torch.zeros(n_layers, d, device=device)
-    m2 = torch.zeros(n_layers, d, device=device)
-    m4 = torch.zeros(n_layers, d, device=device)
+) -> HiddenStateStats:
+    """Run forward hooks and return a populated ``HiddenStateStats``."""
+    stats = HiddenStateStats(n_layers=model.config.n_layer, n_embd=model.config.n_embd)
 
     handles: list[torch.utils.hooks.RemovableHandle] = []
 
-    hook_fn_t = Callable[[nn.Module, tuple[Tensor, ...], Tensor | tuple[Tensor, ...]], None]
-
-    def make_hook(layer_idx: int) -> hook_fn_t:
-        def hook(
-            _m: nn.Module,
-            _inp: tuple[Tensor, ...],
-            out: Tensor | tuple[Tensor, ...],
-        ) -> None:
+    def make_hook(layer_idx: int):
+        def hook(_m, _inp, out):
             h = out[0] if isinstance(out, tuple) else out
-            x = h.reshape(-1, h.shape[-1]).to(torch.float64)
-            n = x.shape[0]
-            count[layer_idx] += n
-            delta = x - mean[layer_idx]
-            mean[layer_idx] += delta.sum(dim=0) / count[layer_idx]
-            delta2 = x - mean[layer_idx]
-            m2[layer_idx] += (delta * delta2).sum(dim=0)
-            m4[layer_idx] += (delta2**4).sum(dim=0)
-
+            stats.update(layer_idx, h.detach())
         return hook
 
     for i, block in enumerate(model.transformer.h):
@@ -81,11 +60,7 @@ def collect_channel_stats(
         for h in handles:
             h.remove()
 
-    var = m2 / count.unsqueeze(-1).clamp(min=1.0)
-    # Excess kurtosis = E[(x-mu)^4] / sigma^4 - 3. Use biased m4/n estimator.
-    fourth = m4 / count.unsqueeze(-1).clamp(min=1.0)
-    kurt = fourth / (var**2).clamp(min=1e-30) - 3.0
-    return {"kurtosis": kurt.detach().cpu(), "var": var.detach().cpu()}
+    return stats
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,7 +79,7 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = GPT2LMHeadModel.from_pretrained(args.checkpoint).to(device)
 
-    data = load_wikitext103(seq_len=cfg["training"]["seq_len"])
+    data = load_c4(seq_len=cfg["training"]["seq_len"])
     loader = DataLoader(
         data.validation,
         batch_size=args.batch_size,
@@ -112,16 +87,15 @@ def main() -> None:
         shuffle=False,
     )
 
-    stats = collect_channel_stats(model, loader, device, max_batches=args.max_batches)
-    kurt = stats["kurtosis"]  # (n_layers, d)
-    max_per_layer = kurt.max(dim=-1).values
-    top10_per_layer = kurt.topk(10, dim=-1).values.mean(dim=-1)
+    stats = collect_hidden_kurtosis(model, loader, device, max_batches=args.max_batches)
 
     report = {
-        "analysis/kurtosis/max_overall": float(kurt.max()),
-        "analysis/kurtosis/top10_mean_overall": float(top10_per_layer.mean()),
-        "analysis/kurtosis/max_per_layer": max_per_layer.tolist(),
-        "analysis/kurtosis/top10_mean_per_layer": top10_per_layer.tolist(),
+        "analysis/kurtosis/mean_first_token": float(stats.kurtosis_per_layer("first").mean()),
+        "analysis/kurtosis/mean_rest_tokens": float(stats.kurtosis_per_layer("rest").mean()),
+        "analysis/kurtosis/mean_all_layers": float(stats.kurtosis_per_layer("all").mean()),
+        "analysis/kurtosis/first_per_layer": stats.kurtosis_per_layer("first").tolist(),
+        "analysis/kurtosis/rest_per_layer": stats.kurtosis_per_layer("rest").tolist(),
+        "analysis/kurtosis/all_per_layer": stats.kurtosis_per_layer("all").tolist(),
     }
     print(report)
 

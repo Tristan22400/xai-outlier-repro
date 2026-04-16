@@ -35,8 +35,8 @@ class LMDataset:
     collator: DataCollatorForLanguageModeling
 
 
-def load_wikitext103(seq_len: int = 256) -> LMDataset:
-    """Load and tokenize WikiText-103 into fixed-length LM blocks.
+def load_c4(seq_len: int = 256) -> LMDataset:
+    """Load and tokenize C4 (en) into fixed-length LM blocks via streaming.
 
     Parameters
     ----------
@@ -47,43 +47,49 @@ def load_wikitext103(seq_len: int = 256) -> LMDataset:
     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2", cache_dir=str(cache))
     tokenizer.pad_token = tokenizer.eos_token
 
-    raw: DatasetDict = load_dataset("wikitext", "wikitext-103-raw-v1", cache_dir=str(cache))
+    # Use streaming=True to avoid multi-terabyte downloads on the cluster
+    ds = load_dataset("allenai/c4", "en", streaming=True, cache_dir=str(cache))
+    
+    # Take a fixed validation set for faster eval (streaming doesn't support easy length)
+    # The paper doesn't specify val size, 5000 examples is usually plenty for P100.
+    # Paper §5 evaluates on 100 000 validation samples — required for stable
+    # tail statistics (kurtosis, max|activation|) on heavy-tailed distributions.
+    val_subset = ds["validation"].take(100_000)
 
     def tokenize(batch: dict[str, list[str]]) -> dict[str, list[list[int]]]:
         return tokenizer(batch["text"], add_special_tokens=False)
 
-    tokenized = raw.map(
-        tokenize,
-        batched=True,
-        remove_columns=["text"],
-        desc="tokenize",
-        num_proc=4,
-    )
-
-    def group(examples: dict[str, list[list[int]]]) -> dict[str, list[list[int]]]:
+    def group_texts(examples: dict[str, list[list[int]]]) -> dict[str, list[list[int]]]:
         # Concatenate then chunk into blocks of ``seq_len``.
         concatenated: list[int] = []
         for ids in examples["input_ids"]:
             concatenated.extend(ids)
         total = (len(concatenated) // seq_len) * seq_len
+        if total == 0:
+            return {"input_ids": [], "labels": []}
         blocks = [concatenated[i : i + seq_len] for i in range(0, total, seq_len)]
         return {"input_ids": blocks, "labels": [list(b) for b in blocks]}
 
-    chunked = tokenized.map(
-        group,
-        batched=True,
-        batch_size=1000,
-        num_proc=4,
-        desc=f"chunk into {seq_len}-token blocks",
-    )
+    # C4 ships with {text, timestamp, url}; strip all non-token columns so the
+    # collator (which calls `tokenizer.pad`) doesn't try to tensorize strings.
+    c4_drop_cols = ["text", "timestamp", "url"]
+    tokenized_train = ds["train"].map(tokenize, batched=True, remove_columns=c4_drop_cols)
+    tokenized_val = val_subset.map(tokenize, batched=True, remove_columns=c4_drop_cols)
+
+    # Drop attention_mask — not needed for fixed-length causal LM blocks
+    tokenized_train = tokenized_train.remove_columns("attention_mask")
+    tokenized_val = tokenized_val.remove_columns("attention_mask")
+
+    chunked_train = tokenized_train.map(group_texts, batched=True, batch_size=1000)
+    chunked_val = tokenized_val.map(group_texts, batched=True, batch_size=1000)
 
     collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
     return LMDataset(
-        train=chunked["train"],
-        validation=chunked["validation"],
+        train=chunked_train,
+        validation=chunked_val,
         tokenizer=tokenizer,
         collator=collator,
     )
 
 
-__all__ = ["LMDataset", "load_wikitext103"]
+__all__ = ["LMDataset", "load_c4"]

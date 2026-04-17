@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# ── Standard library ──────────────────────────────────────────────────────────
+# Standard library
 import gc
 import os
 import warnings
 warnings.filterwarnings("ignore")
 
-# ── Third-party ───────────────────────────────────────────────────────────────
+# Third-party
 import numpy as np
 import torch
 import matplotlib
@@ -21,13 +21,12 @@ matplotlib.rcParams.update({
     "font.family": "DejaVu Sans",
 })
 
-# ══════════════════════════════════════════════════════════════════════════════
+#
 # CONFIGURATION
-# ══════════════════════════════════════════════════════════════════════════════
-
+#
 MODELS = [
     # (display_name,              hf_model_id,                           use_fp16  load_4bit)
-    # ── Pythia series ─────────────────────────────────────────────────────────
+    # -- Pythia series ---
     ("Pythia-14M",                "EleutherAI/pythia-14m",               False,    False),
     ("Pythia-31M",                "EleutherAI/pythia-31m",               False,    False),
     ("Pythia-70M",                "EleutherAI/pythia-70m",               False,    False),
@@ -35,12 +34,12 @@ MODELS = [
     ("Pythia-410M",               "EleutherAI/pythia-410m",              False,    False),
     ("Pythia-1B",                 "EleutherAI/pythia-1b",                True,     False),
     ("Pythia-1.4B",               "EleutherAI/pythia-1.4b",              True,     False),
-    # ── GPT-2 series ──────────────────────────────────────────────────────────
+    # -- GPT-2 series ---
     ("GPT-2 (124M)",              "openai-community/gpt2",               False,    False),
     ("GPT-2-Medium (355M)",       "openai-community/gpt2-medium",        False,    False),
     ("GPT-2-Large (774M)",        "openai-community/gpt2-large",         False,    False),
     ("GPT-2-XL (1.5B)",           "openai-community/gpt2-xl",            True,     False),
-    # ── Llama series ──────────────────────────────────────────────────────────
+    # -- Llama series ---
     # 8B: fits in fp16 on a 40 GB A100 (~16 GB)
     ("Llama-3-8B",                "NousResearch/Meta-Llama-3-8B",        True,     False),
 ]
@@ -54,7 +53,7 @@ N_VIS_CHANNELS: int = 512
 # Output figure path
 SAVE_PATH: str = "figure1_replication.png"
 
-# WikiText-103 validation set — opening passage (canonical evaluation text used in
+# WikiText-103 validation set - opening passage (canonical evaluation text used in
 # many attention / LLM papers, including Kaul et al. 2024).
 # Source: https://huggingface.co/datasets/Salesforce/wikitext  split="validation"
 _BASE_TEXT: str = (
@@ -88,10 +87,9 @@ _BASE_TEXT: str = (
     "have various statistics determining their performance in combat . "
 )
 
-# ══════════════════════════════════════════════════════════════════════════════
+#
 # INPUT PREPARATION
-# ══════════════════════════════════════════════════════════════════════════════
-
+#
 def build_input_ids(tokenizer, seq_len: int, device: str) -> torch.Tensor:
     """
     Tokenise _BASE_TEXT, repeating it until we have at least seq_len tokens,
@@ -104,25 +102,23 @@ def build_input_ids(tokenizer, seq_len: int, device: str) -> torch.Tensor:
     ids = ids[:seq_len]
     return torch.tensor(ids, dtype=torch.long, device=device).unsqueeze(0)
 
-# ══════════════════════════════════════════════════════════════════════════════
+#
 # XAI METRICS
-# ══════════════════════════════════════════════════════════════════════════════
-
+#
 def token0_attention_percent(attn: np.ndarray) -> float:
     dominant_key = np.argmax(attn, axis=1)
     return 100.0 * float((dominant_key == 0).mean())
 
 
-# ── Attention-sink detection ──────────────────────────────────────────────────
-
+# Attention-sink detection
 def _expected_causal_col_mean(L: int) -> np.ndarray:
     """
     For each key position k ∈ [0, L-1], the expected mean attention weight
-    received under a perfectly *uniform* causal model — i.e., if every query q
+    received under a perfectly *uniform* causal model - i.e., if every query q
     distributes its attention equally over the q+1 tokens it can see.
 
         E[col_mean[k]] = (1/L) · Σ_{q=k}^{L-1}  1/(q+1)
-                       = (1/L) · (H_L − H_k)
+                       = (1/L) · (H_L - H_k)
 
     where H_n = Σ_{i=1}^n 1/i  is the n-th harmonic number.
 
@@ -148,25 +144,25 @@ def identify_sinks(
     Identify attention-sink positions using two complementary criteria (OR).
 
     Parameters
-    ----------
-    attn_mean : (L, L) — attention averaged over ALL layers + heads.
+    ---
+    attn_mean : (L, L) - attention averaged over ALL layers + heads.
                 Used only for the causal-excess z-score (structural criterion).
 
-    dom_pct   : (L,) — **paper-faithful metric**.
+    dom_pct   : (L,) - **paper-faithful metric**.
                 For every (layer, head, query) triple, we record which key k
                 had the highest attention weight.  dom_pct[k] is the percentage
                 of those triples where key k won.  This exactly matches the
                 paper's "% of (query, head) pairs" figure (we additionally
                 average over layers).
 
-                ⚠ This is NOT computed from argmax(attn_mean) — that would
+                NOTE: This is NOT computed from argmax(attn_mean) - that would
                 inflate values to ~100 % for all models because averaging
                 layers+heads makes column-0 win every row of the mean matrix.
 
     Criteria
-    --------
-    1. dom_pct[k] ≥ min_dom_pct      — token k is a genuine attentional focus
-    2. log-excess z-score ≥ z_thresh  — column k is a structural outlier
+    ---
+    1. dom_pct[k] ≥ min_dom_pct      - token k is a genuine attentional focus
+    2. log-excess z-score ≥ z_thresh  - column k is a structural outlier
                                         above the causal-position baseline
     """
     L = attn_mean.shape[0]
@@ -198,13 +194,13 @@ def identify_sinks(
 def max_token_kurtosis(hidden: np.ndarray) -> float:
     """
     Parameters
-    ----------
-    hidden : (L, D) float32 — last-layer hidden states.
+    ---
+    hidden : (L, D) float32 - last-layer hidden states.
 
     Returns
-    -------
+    ---
     Maximum Pearson kurtosis over all token positions.
-    (Gaussian baseline = 3; values ≫ 3 indicate outlier channels.)
+    (Gaussian baseline = 3; values >> 3 indicate outlier channels.)
 
     This mirrors Eq. (2) in the paper:
         κ_{m,l} = E_d[(X - μ)^4] / (E_d[(X - μ)^2])^2
@@ -215,15 +211,14 @@ def max_token_kurtosis(hidden: np.ndarray) -> float:
         x = hidden[t].astype(np.float64)
         if x.std() < 1e-8:
             continue
-        k = float(scipy_kurtosis(x, fisher=False))   # fisher=False → Gaussian = 3
+        k = float(scipy_kurtosis(x, fisher=False))   # fisher=False -> Gaussian = 3
         if k > best:
             best = k
     return best
 
-# ══════════════════════════════════════════════════════════════════════════════
+#
 # MODEL LOADING & FEATURE EXTRACTION
-# ══════════════════════════════════════════════════════════════════════════════
-
+#
 def _first_device(model) -> str:
     """Return the device string of the first parameter (works for device_map='auto')."""
     try:
@@ -241,39 +236,39 @@ def extract_features(
     """
     Load *model_id*, forward a 512-token prompt, and return:
 
-      attn_mean : (L, L)                      — mean attention over ALL layers+heads
-      act_abs   : (L, min(D, N_VIS_CHANNELS)) — |last-layer hidden state|
-      kurt      : float                       — max per-token kurtosis
-      sinks     : list[dict]                  — identified attention-sink positions
+      attn_mean : (L, L)                      - mean attention over ALL layers+heads
+      act_abs   : (L, min(D, N_VIS_CHANNELS)) - |last-layer hidden state|
+      kurt      : float                       - max per-token kurtosis
+      sinks     : list[dict]                  - identified attention-sink positions
 
     Parameters
-    ----------
+    ---
     use_fp16   : load in float16 with device_map="auto"  (models ≥ ~1 B params)
     load_4bit  : load in NF4 4-bit quantisation via bitsandbytes (models ≥ ~30 B)
                  Requires:  pip install bitsandbytes
-                 Overrides use_fp16 — the model is loaded at 4-bit regardless.
+                 Overrides use_fp16 - the model is loaded at 4-bit regardless.
     """
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype  = torch.float16 if (use_fp16 or load_4bit) else torch.float32
 
     _banner(name, model_id)
 
-    # ── Tokenizer ────────────────────────────────────────────────────────────
+    # -- Tokenizer ---
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # ── Model ────────────────────────────────────────────────────────────────
+    # -- Model ---
     # attn_implementation="eager" must be set for ALL models, not just large ones.
     # Since transformers >= 4.36, the default changed to "sdpa" (PyTorch fused
-    # kernel) which does NOT materialise the L×L attention matrix →
+    # kernel) which does NOT materialise the L×L attention matrix ->
     # outputs.attentions returns a tuple of None, causing TypeError downstream.
     load_kw: dict = dict(torch_dtype=dtype, attn_implementation="eager")
 
     if load_4bit:
         # 4-bit NF4 quantisation: the model weights are stored in ~4 bits but
         # all compute (including attention) runs in float16.
-        # Llama-3-70B: ~140 GB fp16 → ~35 GB in 4-bit — fits on a single A100.
+        # Llama-3-70B: ~140 GB fp16 -> ~35 GB in 4-bit - fits on a single A100.
         from transformers import BitsAndBytesConfig
         load_kw["quantization_config"] = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -291,13 +286,13 @@ def extract_features(
         model = model.to(device)
     model.eval()
 
-    # ── Build input ───────────────────────────────────────────────────────────
+    # -- Build input ---
     input_device = _first_device(model)
     input_ids = build_input_ids(tokenizer, SEQ_LEN, input_device)
 
-    # ── Forward pass ─────────────────────────────────────────────────────────
-    # output_attentions=True  → outputs.attentions  : tuple[(batch, heads, L, L)]
-    # output_hidden_states=True → outputs.hidden_states : tuple[(batch, L, D)]
+    # -- Forward pass ---
+    # output_attentions=True  -> outputs.attentions  : tuple[(batch, heads, L, L)]
+    # output_hidden_states=True -> outputs.hidden_states : tuple[(batch, L, D)]
     with torch.no_grad():
         outputs = model(
             input_ids,
@@ -305,7 +300,7 @@ def extract_features(
             output_hidden_states=True,
         )
 
-    # ── Attention — average over ALL layers AND all heads (paper §Figure 1) ──
+    # -- Attention - average over ALL layers AND all heads (paper §Figure 1) --
     # outputs.attentions : tuple of n_layers tensors, each (1, n_heads, L, L)
     # We compute a running sum layer-by-layer to avoid holding every layer
     # in RAM simultaneously (important for Llama-3-8B: 32 layers × 32 heads).
@@ -316,30 +311,30 @@ def extract_features(
         )
     n_layers   = len(outputs.attentions)
     attn_acc   = None                                    # accumulator (L, L)
-    dom_counts = None                                    # (L,) int64 — per-head argmax tally
+    dom_counts = None                                    # (L,) int64 - per-head argmax tally
     total_qh   = 0                                       # total (query, head, layer) triples
     for layer_attn in outputs.attentions:               # (1, n_heads, L, L)
         layer_np = layer_attn[0].float().cpu().numpy()  # (n_heads, L, L)
-        layer_mean = layer_np.mean(axis=0)              # (L, L) — mean over heads
+        layer_mean = layer_np.mean(axis=0)              # (L, L) - mean over heads
         attn_acc   = layer_mean if attn_acc is None else attn_acc + layer_mean
         # Paper-faithful dom_pct: for each (head, query) triple record which key wins
-        max_keys = layer_np.argmax(axis=2)              # (n_heads, L) — winning key per query
+        max_keys = layer_np.argmax(axis=2)              # (n_heads, L) - winning key per query
         n_h, L_  = max_keys.shape
         if dom_counts is None:
             dom_counts = np.zeros(L_, dtype=np.int64)
         for h_idx in range(n_h):
             dom_counts += np.bincount(max_keys[h_idx], minlength=L_)
         total_qh += n_h * L_
-    attn_mean       = attn_acc / n_layers               # (L, L) — mean over layers+heads
-    dom_pct_perhead = 100.0 * dom_counts / total_qh     # (L,) — % of triples each key wins
+    attn_mean       = attn_acc / n_layers               # (L, L) - mean over layers+heads
+    dom_pct_perhead = 100.0 * dom_counts / total_qh     # (L,) - % of triples each key wins
 
-    # ── Hidden states — LAST layer only (paper Figure 1) ────────────────────
+    # -- Hidden states - LAST layer only (paper Figure 1) ---
     # outputs.hidden_states : tuple of (n_layers+1) tensors, each (1, L, D)
     # Index 0 = raw token embedding; index -1 = final transformer block output.
     # The paper visualises the last-layer hidden states for activation outliers.
     hidden_np = outputs.hidden_states[-1][0].float().cpu().numpy()  # (L, D)
 
-    # ── XAI metrics ──────────────────────────────────────────────────────────
+    # -- XAI metrics ---
     kurt  = max_token_kurtosis(hidden_np)
     sinks = identify_sinks(attn_mean, dom_pct_perhead)
 
@@ -353,12 +348,12 @@ def extract_features(
     else:
         print("  No dominant attention sinks detected.")
 
-    # ── Activation slice for visualisation ───────────────────────────────────
+    # -- Activation slice for visualisation ---
     n_ch    = min(N_VIS_CHANNELS, hidden_np.shape[1])
     act_abs = np.abs(hidden_np[:, :n_ch])               # (L, n_ch)
 
-    # ── GPU cleanup ───────────────────────────────────────────────────────────
-    # Note: last_attn_tensor / last_hidden_tensor no longer exist — the
+    # -- GPU cleanup ---
+    # Note: last_attn_tensor / last_hidden_tensor no longer exist - the
     # all-layers averaging loop replaced them with attn_acc / hidden_acc.
     del model, outputs, attn_acc, input_ids
     gc.collect()
@@ -370,14 +365,13 @@ def extract_features(
 
 
 def _banner(name: str, model_id: str) -> None:
-    print(f"\n{'═'*64}")
+    print(f"\n{'-'*64}")
     print(f"  {name}  |  {model_id}")
-    print(f"{'═'*64}")
+    print(f"{'-'*64}")
 
-# ══════════════════════════════════════════════════════════════════════════════
+#
 # PLOTTING HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
-
+#
 _CMAP = "Blues"  # sequential blue colormap, matching the paper's palette
 
 
@@ -412,9 +406,9 @@ def plot_model_row(
     """
     Render the two heatmaps for one model row, replicating Figure 1 style:
 
-    Left  — Attention matrix  (Query × Key).
+    Left  - Attention matrix  (Query × Key).
               Coloured boxes mark every detected sink column (not only k=0).
-    Right — Activation magnitude  (Token × Channel).
+    Right - Activation magnitude  (Token × Channel).
               Red vertical lines mark the top outlier channels.
     """
     L = attn_mean.shape[0]
@@ -423,10 +417,10 @@ def plot_model_row(
     attn_ticks = _sparse_ticks(L)
     ch_ticks   = [0, C // 4, C // 2, 3 * C // 4, C - 1]
 
-    # ── Left: Attention heatmap ───────────────────────────────────────────────
+    # -- Left: Attention heatmap ---
     # vmax = raw maximum of the attention matrix (no clipping).
     # attn[0,0] = 1.0 because causal masking forces token-0 to attend only to
-    # itself.  The resulting faint diagonal is NOT a visualisation bug — it is
+    # itself.  The resulting faint diagonal is NOT a visualisation bug - it is
     # the attention-sink phenomenon: token-0 monopolises attention weight, so
     # self-attention on the diagonal is genuinely small.  Do not rescale.
     im_attn = ax_attn.imshow(
@@ -438,7 +432,7 @@ def plot_model_row(
         vmax=attn_mean.max(),
     )
 
-    # ── Title: list all detected sinks ───────────────────────────────────────
+    # -- Title: list all detected sinks ---
     if sinks:
         parts = [
             f"k={s['pos']} ({s['dom_pct']:.1f}%)"
@@ -468,13 +462,13 @@ def plot_model_row(
     _X_PAD = max(3, int(L * 0.01))   # 1 % of sequence length, minimum 3 units
     ax_attn.set_xlim(-_X_PAD, L - 0.5)
 
-    # Sink positions are reported in the title only — no overlays drawn on the
+    # Sink positions are reported in the title only - no overlays drawn on the
     # heatmap so the original blue gradient is fully preserved.
     _attach_colorbar(fig, ax_attn, im_attn)
 
-    # ── Right: Activation magnitude heatmap ──────────────────────────────────
+    # -- Right: Activation magnitude heatmap ---
     # Clip the color scale at the 99th percentile so extreme outliers
-    # do not wash out the rest — but the outliers are still visible.
+    # do not wash out the rest - but the outliers are still visible.
     vmax_act = float(np.percentile(act_abs, 99.5))
     im_act = ax_act.imshow(
         act_abs,
@@ -536,10 +530,9 @@ def _plot_error_row(axes_row, name: str, exc: Exception) -> None:
         ax.set_yticks([])
         ax.set_title(name, fontsize=9, fontweight="bold", color="crimson")
 
-# ══════════════════════════════════════════════════════════════════════════════
+#
 # MAIN
-# ══════════════════════════════════════════════════════════════════════════════
-
+#
 def main() -> None:
     n_models = len(MODELS)
 
@@ -556,7 +549,7 @@ def main() -> None:
 
     fig.suptitle(
         "Attention Sinks & Activation Outliers in LLMs\n"
-        "Replication of Figure 1 — "
+        "Replication of Figure 1 - "
         '"From Attention to Activation" (Kaul et al., arXiv:2410.17174)',
         fontsize=12, fontweight="bold", y=1.003,
     )
@@ -584,14 +577,14 @@ def main() -> None:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-    # ── Save ────────────────────────────────────────────────────────────────
+    # -- Save ---
     plt.savefig(SAVE_PATH, dpi=150, bbox_inches="tight")
-    print(f"\n{'─'*64}")
-    print(f"  Figure saved  →  {SAVE_PATH}")
-    print(f"{'─'*64}")
+    print(f"\n{'-'*64}")
+    print(f"  Figure saved  ->  {SAVE_PATH}")
+    print(f"{'-'*64}")
 
-    # ── Console summary: per-model sink table ────────────────────────────────
-    sep = "─"
+    # -- Console summary: per-model sink table ---
+    sep = "-"
     print(f"\n{'Model':<26} {'Kurt':>8}  "
           f"{'Sink pos':>8}  {'dom%':>7}  {'excess':>8}  {'z':>6}")
     print(sep * 70)

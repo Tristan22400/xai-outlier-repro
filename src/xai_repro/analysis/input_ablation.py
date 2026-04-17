@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Input-only ablations for attention sink — NO retraining required.
+"""Input-only ablations for attention sink - NO retraining required.
 
 All experiments run a single forward pass on a pretrained model:
 
@@ -8,15 +8,15 @@ All experiments run a single forward pass on a pretrained model:
     prepend     : prepend a rare/neutral token; check if sink follows position 0.
     length      : sweep sequence length; see how sink scales.
     zero_pe     : zero out learned position embeddings (GPT-2 style only);
-                  PSEUDO-ablation — model degraded, interpret with care.
+                  PSEUDO-ablation - model degraded, interpret with care.
 
 Metrics (Kaul et al. 2024 §2.1):
-    A  — argmax %: fraction of (layer, head, query) triples whose argmax
+    A  - argmax %: fraction of (layer, head, query) triples whose argmax
          falls on the probed key position.
-    B  — mass   %: mean attention weight on the probed key position.
+    B  - mass   %: mean attention weight on the probed key position.
 
 Usage
------
+---
   python input_ablation.py --models openai-community/gpt2-medium
   python input_ablation.py --models NousResearch/Meta-Llama-3-8B --fp16
   python input_ablation.py --models gpt2 gpt2-medium --experiments baseline prepend length
@@ -34,7 +34,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 warnings.filterwarnings("ignore")
 
-# ── shared natural-text prompt (~600 tokens of English) ──────────────────────
+# shared natural-text prompt (~600 tokens of English)
 TEXT = (
     "A language model is a probability distribution over sequences of words. "
     "Given any sequence of words, a language model assigns a probability to the whole sequence. "
@@ -65,7 +65,7 @@ OUT = Path("ablation_results")
 OUT.mkdir(exist_ok=True)
 
 
-# ── utilities ────────────────────────────────────────────────────────────────
+# utilities
 def first_device(model) -> str:
     return str(next(model.parameters()).device)
 
@@ -100,7 +100,7 @@ def forward_attn(model, ids):
     with torch.no_grad():
         out = model(ids, output_attentions=True)
     if out.attentions is None or out.attentions[0] is None:
-        raise RuntimeError("Attention tensors are None — ensure attn_implementation='eager'.")
+        raise RuntimeError("Attention tensors are None - ensure attn_implementation='eager'.")
     return torch.stack([a[0].float().cpu() for a in out.attentions])   # (L, H, T, T)
 
 
@@ -119,7 +119,7 @@ def max_seq(model) -> int:
     )
 
 
-# ── experiments ──────────────────────────────────────────────────────────────
+# experiments
 def exp_baseline(model, tok, device, seq_len=512):
     ids  = tokenize(tok, TEXT, seq_len, device, add_bos=True)
     attn = forward_attn(model, ids)
@@ -191,7 +191,7 @@ def exp_zero_pe(model, tok, device, seq_len=512):
         wpe.weight.data.copy_(saved)
     return {"experiment": "zero_pe", "seq_len": seq_len,
             "argmax_pct_key0": a, "mass_pct_key0": m,
-            "note": "PSEUDO ablation — model trained WITH PE; PPL degrades. "
+            "note": "PSEUDO ablation - model trained WITH PE; PPL degrades. "
                     "If sink persists => learned PE pattern is not the cause. "
                     "If sink vanishes => inconclusive (model may simply be broken)."}
 
@@ -201,8 +201,8 @@ def exp_swap_at(model, tok, device, seq_len=512, swap_pos=0, window=5):
     every other position identical. Compare mass/argmax distribution at the
     swap position and its neighbourhood before vs. after.
 
-    If sink follows POSITION → mass @ swap_pos should be preserved.
-    If sink follows TOKEN identity → mass @ swap_pos should collapse.
+    If sink follows POSITION -> mass @ swap_pos should be preserved.
+    If sink follows TOKEN identity -> mass @ swap_pos should collapse.
     """
     ids = tokenize(tok, TEXT, seq_len, device, add_bos=False)
     neutral_id = min(tok.vocab_size - 1, 5000)
@@ -255,7 +255,7 @@ EXPERIMENTS = {
 }
 
 
-# ── orchestration ────────────────────────────────────────────────────────────
+# orchestration
 def run(model_id: str, fp16: bool, experiments):
     print(f"\n{'='*68}\n  {model_id}\n{'='*68}")
     model, tok = load(model_id, fp16)
@@ -287,33 +287,33 @@ def print_summary(all_results):
         model = r["model"].split("/")[-1]
         exp   = r["experiment"]
         if "skipped" in r:
-            print(f"  {model:<30}  {exp:<12}  {'— skip —':>8}  {'':>8}  {r['skipped']}")
+            print(f"  {model:<30}  {exp:<12}  {'- skip -':>8}  {'':>8}  {r['skipped']}")
             continue
         if "error" in r:
-            print(f"  {model:<30}  {exp:<12}  {'— err —':>8}  {'':>8}  {r['error'][:60]}")
+            print(f"  {model:<30}  {exp:<12}  {'- err -':>8}  {'':>8}  {r['error'][:60]}")
             continue
         if exp == "length_sweep":
             for row in r["rows"]:
                 L = row["seq_len"]
                 if "skipped" in row:
                     label = f"L={L}"
-                    print(f"  {model:<30}  {label:<12}  {'— skip —':>8}")
+                    print(f"  {model:<30}  {label:<12}  {'- skip -':>8}")
                 else:
                     print(f"  {model:<30}  L={L:<10}  "
                           f"{row['argmax_pct_key0']:>7.2f}%  {row['mass_pct_key0']:>7.2f}%")
             continue
         if exp == "prepend":
             print(f"  {model:<30}  prepend key0  {r['argmax_pct_key0']:>7.2f}%  "
-                  f"{r['mass_pct_key0']:>7.2f}%  ← new prepended token {r['prepend_token_id']}")
+                  f"{r['mass_pct_key0']:>7.2f}%  <- new prepended token {r['prepend_token_id']}")
             print(f"  {model:<30}  prepend key1  {r['argmax_pct_key1']:>7.2f}%  "
-                  f"{r['mass_pct_key1']:>7.2f}%  ← what used to be pos 0")
+                  f"{r['mass_pct_key1']:>7.2f}%  <- what used to be pos 0")
             continue
         if exp.startswith("swap@"):
             pos = r["swap_pos"]
-            print(f"  {model:<30}  swap@{pos}  orig={r['original_token']!r}  →  neutral id {r['neutral_token_id']}")
+            print(f"  {model:<30}  swap@{pos}  orig={r['original_token']!r}  ->  neutral id {r['neutral_token_id']}")
             print(f"    {'key':>5}  {'base arg%':>9}  {'base mass%':>10}  {'swap arg%':>9}  {'swap mass%':>10}  {'Δmass':>7}")
             for row in r["rows"]:
-                marker = " ←" if row["key"] == pos else ""
+                marker = " <-" if row["key"] == pos else ""
                 print(f"    {row['key']:>5}  {row['base_argmax']:>8.2f}%  {row['base_mass']:>9.2f}%  "
                       f"{row['swap_argmax']:>8.2f}%  {row['swap_mass']:>9.2f}%  {row['delta_mass']:>+7.2f}{marker}")
             continue
@@ -341,4 +341,4 @@ if __name__ == "__main__":
     Path(args.out).parent.mkdir(exist_ok=True, parents=True)
     json.dump(all_results, open(args.out, "w"), indent=2, ensure_ascii=False)
     print_summary(all_results)
-    print(f"\nSaved → {args.out}")
+    print(f"\nSaved -> {args.out}")

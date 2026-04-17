@@ -89,8 +89,6 @@ python -m xai_repro.analysis.ptq_int8  --checkpoint runs/<variant>/final --confi
 
 ## Known deviations from the papers
 
-- **WikiText-103** instead of C4 — the P100 budget cannot converge on C4
-  in 36h.
 - **OrthoAdam vocab axis is identity**: the full `50257² ≈ 2.5 × 10⁹`
   rotation is infeasible. `max_rotate_dim=4096` skips any axis beyond
   that, so only the 512-dim side of the embedding is rotated.

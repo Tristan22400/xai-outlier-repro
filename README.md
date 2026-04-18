@@ -74,8 +74,6 @@ ssh gpu-telecom
 git clone <this repo>
 cd xai-outlier-repro
 bash scripts/setup_cluster.sh     
-sbatch scripts/run_baseline.sbatch
-
 ```
 
 After each job finishes, verify health:

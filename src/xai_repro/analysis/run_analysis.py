@@ -30,7 +30,6 @@ from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
-from transformers import GPT2LMHeadModel
 
 from xai_repro.analysis.interpretability import build_report, extract_all
 from xai_repro.analysis.ptq_int8 import run_all_schemes, PTQ_SCHEMES
@@ -117,7 +116,7 @@ def find_checkpoint(runs_dir: Path, variant: str) -> Path | None:
     if final.exists() and (final / "config.json").exists():
         return final
     # Check for numbered checkpoints
-    checkpoints = sorted(base.glob("checkpoint-*"), key=lambda p: p.name)
+    checkpoints = sorted(base.glob("checkpoint-*"), key=lambda p: int(p.name.split("-")[-1]))
     if checkpoints:
         last = checkpoints[-1]
         if (last / "config.json").exists():

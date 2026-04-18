@@ -21,4 +21,3 @@ dependencies:
       - mypy>=1.10
       - pytest>=8.0
       - types-PyYAML
-      - -e .

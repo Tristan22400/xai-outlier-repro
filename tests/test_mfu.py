@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from xai_repro.callbacks.mfu import (
+from xai_repro.callbacks import (
     P100_FP32_PEAK_FLOPS,
     chinchilla_flops_per_token,
 )

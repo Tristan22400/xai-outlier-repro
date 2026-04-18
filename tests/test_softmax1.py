@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import torch
 
-from xai_repro.attention.softmax1 import softmax1
+from xai_repro.attention import softmax1
 
 
 def _naive_softmax1(x: torch.Tensor, dim: int = -1) -> torch.Tensor:

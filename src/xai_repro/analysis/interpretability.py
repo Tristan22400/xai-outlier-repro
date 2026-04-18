@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -39,7 +40,6 @@ import torch
 from torch import Tensor, nn
 from torch.utils.data import DataLoader
 from transformers import GPT2LMHeadModel
-from transformers.models.gpt2.modeling_gpt2 import GPT2Attention
 
 from xai_repro.data import load_c4
 from xai_repro.model import load_config
@@ -65,7 +65,19 @@ class AttentionDominanceStats:
         self.total_count = torch.zeros(self.n_layers, self.n_heads, dtype=torch.int64)
 
     def update(self, layer_idx: int, attn_weights: Tensor) -> None:
-        """Update from attention weights of shape (B, n_heads, T, T)."""
+        """Update running counters from one batch of attention weights.
+
+        Args:
+            layer_idx: Zero-based transformer block index.
+            attn_weights: Attention weight matrix. Shape: ``(B, n_heads, T_q, T_k)``.
+                Row sums must be ≤ 1 for softmax-1 or exactly 1 for standard softmax.
+        """
+        assert attn_weights.ndim == 4, (
+            f"Expected 4-D attention weights (B, H, Tq, Tk); got shape {attn_weights.shape}"
+        )
+        assert 0 <= layer_idx < self.n_layers, (
+            f"layer_idx {layer_idx} out of range [0, {self.n_layers})"
+        )
         # attn_weights: (B, H, Tq, Tk)
         argmax_keys = attn_weights.argmax(dim=-1)  # (B, H, Tq)
         is_first = (argmax_keys == 0)  # (B, H, Tq)
@@ -145,7 +157,6 @@ class HiddenStateStats:
         # Jensen's inequality guarantees raw kurtosis ≥ 1 (Gaussian = 3).
         # Any value < 0.99 signals a numerical or logic bug.
         if not (kurt >= 0.99).all():
-            import warnings
             warnings.warn(
                 f"Kurtosis below 1 detected (min={float(kurt.min()):.4f}). "
                 "This violates Jensen's inequality and indicates a bug.",
@@ -175,7 +186,23 @@ class HiddenStateStats:
             getattr(self, f"max_abs_{suffix}")[layer_idx] = torch.tensor(cur_max, dtype=torch.float64)
 
     def update(self, layer_idx: int, hidden: Tensor) -> None:
-        """Update stats from hidden states of shape (B, T, D)."""
+        """Update running kurtosis and activation statistics for one batch.
+
+        Args:
+            layer_idx: Zero-based transformer block index.
+            hidden: Residual-stream hidden states. Shape: ``(B, T, D)`` where
+                ``B`` is batch size, ``T`` is sequence length, and ``D`` is
+                ``n_embd``.
+        """
+        assert hidden.ndim == 3, (
+            f"Expected 3-D hidden states (B, T, D); got shape {hidden.shape}"
+        )
+        assert hidden.shape[-1] == self.n_embd, (
+            f"Hidden state last dim {hidden.shape[-1]} ≠ n_embd {self.n_embd}"
+        )
+        assert 0 <= layer_idx < self.n_layers, (
+            f"layer_idx {layer_idx} out of range [0, {self.n_layers})"
+        )
         x = hidden.to(torch.float64)
         b, t, d = x.shape
 
@@ -446,14 +473,8 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print(f"Loading checkpoint from {args.checkpoint} ...")
-    model = GPT2LMHeadModel.from_pretrained(
-        str(args.checkpoint), attn_implementation="eager"
-    ).to(device)
-
-    # If this is a softmax1 model, inject the softmax1 attention
-    if args.variant == "softmax1":
-        from xai_repro.attention import inject_softmax1
-        model = inject_softmax1(model)
+    from xai_repro.analysis.ptq_int8 import _load_checkpoint
+    model = _load_checkpoint(args.checkpoint, device, variant=args.variant, config_path=args.config)
 
     data = load_c4(seq_len=cfg["training"]["seq_len"])
     loader = DataLoader(

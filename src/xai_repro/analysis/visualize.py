@@ -42,7 +42,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 import torch
-from matplotlib.lines import Line2D
 from torch import Tensor
 
 # ---------------------------------------------------------------------------
@@ -77,7 +76,7 @@ VARIANT_COLORS = {
 }
 VARIANT_LABELS = {
     "vanilla_gpt2":   "Vanilla GPT-2 (LN + biases)",
-    "baseline":       "Modified base (Adam + softmax)",
+    "baseline":       "baseline",
     "softmax1":       "softmax-1",
     "orthoadam":      "OrthoAdam",
     "softmax1_ortho": "softmax-1 + OrthoAdam",
@@ -162,12 +161,8 @@ def plot_training_curves_from_wandb(
         )
 
     ax.set_xlabel("Training Step")
-    ax.set_ylabel("Validation Loss (log scale)")
-    ax.set_title(
-        "Figure 1 — Sanity Check: Training Stability\n"
-        "All variants converge to the same validation loss",
-        fontweight="bold",
-    )
+    ax.set_ylabel("Validation Loss")
+    ax.set_title("Training Stability: Validation Loss vs. Training Step", fontweight="bold")
     ax.set_yscale("log")
     ax.legend(loc="upper right")
     ax.margins(x=0.05)
@@ -207,12 +202,7 @@ def plot_layerwise_dominance(
         if variant not in reports:
             print(f"  [SKIP] No report for '{variant}'")
             continue
-        # Average dominance across all heads
         dom_avg = np.array(reports[variant]["attn/dominance_per_layer"]) * 100
-        # Maximum dominance achieved by any single head
-        dom_heads = np.array(reports[variant]["attn/dominance_per_layer_per_head"])
-        dom_max = np.max(dom_heads, axis=1) * 100
-
         layers = np.arange(len(dom_avg))
         color = VARIANT_COLORS.get(variant, "#999999")
         label_base = VARIANT_LABELS.get(variant, variant)
@@ -222,21 +212,10 @@ def plot_layerwise_dominance(
             layers, dom_avg,
             marker=MARKER.get(variant, "o"),
             color=color,
-            label=f"{label_base} (Avg)",
+            label=label_base,
             linewidth=2.0,
             markersize=6,
             alpha=1.0,
-        )
-        # Plot Max (Dashed)
-        ax.plot(
-            layers, dom_max,
-            marker=MARKER.get(variant, "o"),
-            linestyle="--",
-            color=color,
-            label=f"{label_base} (Max Head)",
-            linewidth=1.2,
-            markersize=4,
-            alpha=0.6,
         )
 
     n_layers = max(
@@ -244,12 +223,8 @@ def plot_layerwise_dominance(
         for v in variants if v in reports
     )
     ax.set_xlabel("Layer Index")
-    ax.set_ylabel("First-Token Max-Attention Rate (%)")
-    ax.set_title(
-        "Figure 2 — Attention Dominance vs. Network Depth\n"
-        "softmax-1 eliminates the attention-sink phenomenon",
-        fontweight="bold",
-    )
+    ax.set_ylabel("Avg. First-Token Attention Rate (%)")
+    ax.set_title("Attention Sink: Average First-Token Attention Rate per Layer", fontweight="bold")
     ax.set_xlim(-1, n_layers)
     ax.set_xticks(np.arange(n_layers))
     ax.margins(y=0.05)  # Let it breathe, don't stick 0 to the axis
@@ -323,12 +298,8 @@ def plot_layerwise_kurtosis(
         for v in variants if v in reports
     )
     ax.set_xlabel("Layer Index")
-    ax.set_ylabel("First-Token Kurtosis (raw, log scale)")
-    ax.set_title(
-        "Figure 3 — Outlier Severity: Hidden-State Kurtosis vs. Depth\n"
-        "OrthoAdam keeps kurtosis at the Gaussian baseline (κ ≈ 3)",
-        fontweight="bold",
-    )
+    ax.set_ylabel("First-Token Kurtosis (log scale)")
+    ax.set_title("Outlier Severity: First-Token Hidden-State Kurtosis per Layer", fontweight="bold")
     ax.set_yscale("log")
     ax.set_xlim(-1, n_layers)
     ax.set_xticks(np.arange(n_layers))
@@ -378,10 +349,6 @@ def plot_layerwise_max_activation(
             "activation/max_abs_per_layer_first",
             reports[variant].get("activation/max_abs_per_layer_all", []),
         ))
-        mean_act = np.array(reports[variant].get(
-            "activation/mean_abs_per_layer_first",
-            reports[variant].get("activation/mean_abs_per_layer_all", []),
-        ))
         layers = np.arange(len(max_act))
         color = VARIANT_COLORS.get(variant, "#999999")
         label_base = VARIANT_LABELS.get(variant, variant)
@@ -391,24 +358,12 @@ def plot_layerwise_max_activation(
             layers, max_act,
             marker=MARKER.get(variant, "o"),
             color=color,
-            label=f"{label_base} (Max)",
+            label=label_base,
             linewidth=2.2,
             markersize=6,
             alpha=0.9,
         )
 
-        # Plot Mean (Dashed) if available
-        if len(mean_act) > 0:
-            ax.plot(
-                layers, mean_act,
-                marker=MARKER.get(variant, "o"),
-                linestyle="--",
-                color=color,
-                label=f"{label_base} (Mean)",
-                linewidth=1.2,
-                markersize=4,
-                alpha=0.6,
-            )
 
     n_layers = max(
         len(reports[v].get("activation/max_abs_per_layer_first",
@@ -417,11 +372,7 @@ def plot_layerwise_max_activation(
     )
     ax.set_xlabel("Layer Index")
     ax.set_ylabel("Max |Activation| of First Token (log scale)")
-    ax.set_title(
-        "Figure 4 — Outlier Magnitude: Max Absolute Activation vs. Depth\n"
-        "OrthoAdam drastically reduces peak activation magnitudes",
-        fontweight="bold",
-    )
+    ax.set_title("Outlier Magnitude: Max Absolute Activation of the First Token per Layer", fontweight="bold")
     ax.set_yscale("log")
     ax.set_xlim(-1, n_layers)
     ax.set_xticks(np.arange(n_layers))
@@ -514,12 +465,8 @@ def plot_beta2_sensitivity(
     )
 
     ax.set_xlabel("Training Step")
-    ax.set_ylabel("Mean Layer Kurtosis (raw, log scale)")
-    ax.set_title(
-        "Figure 5 — XAI Bonus: Optimizer Sensitivity (β₂)\n"
-        "Higher β₂ → faster outlier emergence; OrthoAdam suppresses the spike",
-        fontweight="bold",
-    )
+    ax.set_ylabel("Mean Layer Kurtosis (log scale)")
+    ax.set_title("Optimizer Sensitivity to β₂: Mean Hidden-State Kurtosis vs. Training Step", fontweight="bold")
     ax.set_yscale("log")
     ax.legend(loc="upper left", fontsize=8)
     ax.margins(x=0.05)
@@ -568,7 +515,7 @@ def plot_attention_heatmaps(
         ax.set_title(VARIANT_LABELS.get(variant, variant))
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-    fig.suptitle("Mean Attention Map (all layers, all heads)", fontweight="bold")
+    fig.suptitle("Mean Attention Map Averaged Over All Layers and Heads", fontweight="bold")
     plt.tight_layout()
     fig.savefig(out_path)
     plt.close(fig)
@@ -613,11 +560,86 @@ def plot_per_layer_attention_heatmaps(
         r, c = divmod(idx, ncols)
         axes[r, c].set_visible(False)
 
-    fig.suptitle(f"Per-layer Attention Maps — {VARIANT_LABELS.get(variant, variant)}", fontweight="bold")
+    fig.suptitle(f"Per-Layer Attention Maps — {VARIANT_LABELS.get(variant, variant)}", fontweight="bold")
     plt.tight_layout()
     fig.savefig(out_path)
     plt.close(fig)
     print(f"Saved per-layer attention heatmaps → {out_path}")
+
+
+def plot_attention_heatmaps_with_sink_profile(
+    snapshots: dict[str, dict[str, Tensor]],
+    out_path: Path,
+    seq_len: int | None = None,
+) -> None:
+    """Attention heatmap + first-token sink profile strip side by side.
+
+    For each variant:
+    - Left panel: mean attention map (log scale, Blues cmap)
+    - Right panel: vertical bar showing attn[q, 0] for each query q,
+      making the attention-sink strength directly readable and comparable.
+    """
+    variants = list(snapshots.keys())
+    n = len(variants)
+    # 2 subplots per variant: heatmap (width 4) + profile strip (width 1)
+    width_ratios = [4, 1] * n
+    fig, axes = plt.subplots(
+        1, 2 * n,
+        figsize=(5.5 * n, 4.5),
+        gridspec_kw={"width_ratios": width_ratios, "wspace": 0.05},
+        squeeze=False,
+    )
+
+    for col, variant in enumerate(variants):
+        attn_dict = snapshots[variant]["attention_weights"]
+        layers_sorted = sorted(attn_dict.keys(), key=lambda x: int(x))
+        all_attn = torch.stack([attn_dict[k].squeeze(0) for k in layers_sorted])
+        mean_attn = all_attn.mean(dim=(0, 1)).numpy()
+        if seq_len is not None:
+            mean_attn = mean_attn[:seq_len, :seq_len]
+
+        T = mean_attn.shape[0]
+        ax_map = axes[0, 2 * col]
+        ax_prof = axes[0, 2 * col + 1]
+
+        # --- Heatmap panel ---
+        norm = mcolors.LogNorm(vmin=max(mean_attn.min(), 1e-5), vmax=mean_attn.max())
+        im = ax_map.imshow(
+            mean_attn, aspect="equal", cmap="Blues", norm=norm,
+            origin="upper", extent=[0, T, T, 0], interpolation="nearest",
+        )
+        ax_map.set_xlim(0, T)
+        ax_map.set_ylim(T, 0)
+        ax_map.grid(False)
+        ax_map.set_xlabel("Key Position")
+        ax_map.set_ylabel("Query Position")
+        ax_map.set_title(VARIANT_LABELS.get(variant, variant), fontweight="bold")
+        # Highlight the first column with a vertical line
+        ax_map.axvline(x=1, color="red", linewidth=1.2, linestyle="--", alpha=0.7)
+
+        # --- Sink profile panel ---
+        sink_weights = mean_attn[:, 0]   # attn[q, key=0] for each query q
+        qs = np.arange(T)
+        color = VARIANT_COLORS.get(variant, "#1f77b4")
+        ax_prof.barh(qs, sink_weights, color=color, alpha=0.75, height=0.9)
+        ax_prof.set_ylim(T, 0)
+        ax_prof.set_xlabel("Attn → tok 0", fontsize=8)
+        ax_prof.tick_params(axis="y", left=False, labelleft=False)
+        ax_prof.tick_params(axis="x", labelsize=7)
+        ax_prof.set_xscale("log")
+        ax_prof.grid(True, axis="x", alpha=0.3, which="both")
+        ax_prof.spines["left"].set_visible(False)
+
+        fig.colorbar(im, ax=ax_prof, fraction=0.25, pad=0.35, label="Attn weight")
+
+    fig.suptitle(
+        "Mean Attention Map + First-Token Sink Profile (Averaged Over All Layers & Heads)",
+        fontweight="bold",
+    )
+    plt.tight_layout()
+    fig.savefig(out_path)
+    plt.close(fig)
+    print(f"Saved attention heatmaps with sink profile → {out_path}")
 
 
 def plot_hidden_state_heatmap(
@@ -627,19 +649,31 @@ def plot_hidden_state_heatmap(
     """Channel × token-position heatmap of hidden states (log scale)."""
     variants = list(snapshots.keys())
     n = len(variants)
+
+    # Collect mid-layer arrays for all variants to compute a shared scale
+    mid_layers: dict[str, str] = {}
+    abs_arrays: dict[str, np.ndarray] = {}
+    for variant in variants:
+        hs_dict = snapshots[variant]["hidden_states"]
+        layers_sorted = sorted(hs_dict.keys(), key=lambda x: int(x))
+        mid = layers_sorted[len(layers_sorted) // 2]
+        mid_layers[variant] = mid
+        abs_arrays[variant] = np.abs(hs_dict[mid].squeeze(0).numpy())
+
+    global_vmin = max(min(a.min() for a in abs_arrays.values()), 1e-2)
+    global_vmax = max(a.max() for a in abs_arrays.values())
+    shared_norm = mcolors.LogNorm(vmin=global_vmin, vmax=global_vmax)
+
     fig, axes = plt.subplots(1, n, figsize=(6 * n, 4), squeeze=False)
 
     for col, variant in enumerate(variants):
-        hs_dict = snapshots[variant]["hidden_states"]
-        layers_sorted = sorted(hs_dict.keys(), key=lambda x: int(x))
-        mid_layer = layers_sorted[len(layers_sorted) // 2]
-        h = hs_dict[mid_layer].squeeze(0).numpy()
-        ax = axes[0, col]
-        abs_h = np.abs(h)
+        abs_h = abs_arrays[variant]
+        mid_layer = mid_layers[variant]
         D, T_len = abs_h.shape[1], abs_h.shape[0]
+        ax = axes[0, col]
         im = ax.imshow(
-            abs_h.T, aspect="auto", cmap="hot",  # keep auto for non-square HS
-            norm=mcolors.LogNorm(vmin=max(abs_h.min(), 1e-2), vmax=abs_h.max()),
+            abs_h.T, aspect="auto", cmap="hot",
+            norm=shared_norm,
             origin="upper", extent=[0, T_len, D, 0], interpolation="nearest"
         )
         ax.set_xlim(0, T_len)
@@ -648,9 +682,9 @@ def plot_hidden_state_heatmap(
         ax.set_xlabel("Token Position")
         ax.set_ylabel("Channel ID")
         ax.set_title(f"{VARIANT_LABELS.get(variant, variant)}\n(Layer {mid_layer})")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-    fig.suptitle("Hidden State Activations (|x|, log scale)", fontweight="bold")
+    fig.colorbar(im, ax=axes[0, -1], fraction=0.046, pad=0.04)
+    fig.suptitle("Hidden-State Activation Magnitudes (|x|, log scale)", fontweight="bold")
     plt.tight_layout()
     fig.savefig(out_path)
     plt.close(fig)
@@ -689,7 +723,7 @@ def plot_summary_bars(
             )
         ax.tick_params(axis="x", rotation=15)
 
-    fig.suptitle("Quantitative Comparison Across Variants", fontweight="bold", y=1.02)
+    fig.suptitle("Summary of Key Outlier Metrics Across Architectural Variants", fontweight="bold", y=1.02)
     plt.tight_layout()
     fig.savefig(out_path)
     plt.close(fig)
@@ -814,6 +848,9 @@ def main() -> None:
     # ------------------------------------------------------------------ #
     if snapshots:
         plot_attention_heatmaps(snapshots, args.out_dir / "supp_attention_heatmaps.png")
+        plot_attention_heatmaps_with_sink_profile(
+            snapshots, args.out_dir / "supp_attention_heatmaps_sink_profile.png"
+        )
         plot_hidden_state_heatmap(snapshots, args.out_dir / "supp_hidden_state_heatmap.png")
         for variant, snap in snapshots.items():
             plot_per_layer_attention_heatmaps(

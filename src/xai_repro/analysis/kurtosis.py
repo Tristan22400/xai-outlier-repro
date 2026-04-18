@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 from transformers import GPT2LMHeadModel
 
 from xai_repro.analysis.interpretability import HiddenStateStats
+from xai_repro.analysis.ptq_int8 import _load_checkpoint
 from xai_repro.data import load_c4
 from xai_repro.model import load_config
 
@@ -67,6 +68,9 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--checkpoint", type=Path, required=True)
     p.add_argument("--config", type=Path, required=True)
+    p.add_argument("--variant", type=str, default=None,
+                   choices=("baseline", "softmax1", "orthoadam"),
+                   help="Model variant (needed to reconstruct RMSNormSingle architecture).")
     p.add_argument("--max_batches", type=int, default=32)
     p.add_argument("--batch_size", type=int, default=8)
     p.add_argument("--wandb_run", type=str, default=None, help="Existing run id to log to.")
@@ -77,7 +81,9 @@ def main() -> None:
     args = parse_args()
     cfg = load_config(args.config)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = GPT2LMHeadModel.from_pretrained(args.checkpoint).to(device)
+    # Use _load_checkpoint instead of from_pretrained so that the RMSNormSingle
+    # architecture (produced by build_model) is correctly reconstructed.
+    model = _load_checkpoint(args.checkpoint, device, variant=args.variant, config_path=args.config)
 
     data = load_c4(seq_len=cfg["training"]["seq_len"])
     loader = DataLoader(

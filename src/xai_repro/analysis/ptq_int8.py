@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -55,12 +56,19 @@ from xai_repro.model import load_config
 def absmax_quantize(x: Tensor, bits: int, axis: int | None) -> Tensor:
     """Symmetric absmax fake-quant.  Returns dequantized fp32 of same shape.
 
-    Parameters
-    ----------
-    x     : input tensor.
-    bits  : quantization width (e.g. 8).
-    axis  : ``None`` → per-tensor; ``int`` → per-channel along that axis.
+    Computes ``scale = max|x| / (2^(bits-1) - 1)``, clips and rounds ``x/scale``
+    to the signed integer range ``[-qmax, qmax]``, then multiplies back by
+    ``scale`` — the "fake" in fake quantization.
+
+    Args:
+        x: Input tensor of arbitrary shape.
+        bits: Quantization bit-width (e.g. 8 for INT8).
+        axis: ``None`` → per-tensor scale; ``int`` → per-channel along that axis.
+
+    Returns:
+        Dequantized tensor of the same dtype and shape as ``x``.
     """
+    assert bits >= 1, f"bits must be ≥ 1; got {bits}"
     qmax = 2 ** (bits - 1) - 1  # signed symmetric range
     if axis is None:
         scale = x.abs().max().clamp(min=1e-12)
@@ -74,7 +82,21 @@ def absmax_quantize(x: Tensor, bits: int, axis: int | None) -> Tensor:
 
 
 def zeropoint_quantize(x: Tensor, bits: int, axis: int | None) -> Tensor:
-    """Asymmetric zero-point fake-quant (min–max)."""
+    """Asymmetric zero-point fake-quant (min–max range mapping).
+
+    Computes ``scale = (max - min) / (2^bits - 1)`` and
+    ``zero_point = round(-min / scale)``, quantizes to unsigned integers
+    ``[0, 2^bits - 1]``, then dequantizes back to fp32.
+
+    Args:
+        x: Input tensor of arbitrary shape.
+        bits: Quantization bit-width (e.g. 4 for INT4).
+        axis: ``None`` → per-tensor; ``int`` → per-channel along that axis.
+
+    Returns:
+        Dequantized tensor of the same dtype and shape as ``x``.
+    """
+    assert bits >= 1, f"bits must be ≥ 1; got {bits}"
     qmax = 2**bits - 1
     if axis is None:
         x_min = x.min()
@@ -162,8 +184,6 @@ class QuantizedLinear(nn.Module):
         if cfg.act_bits is not None:
             init = torch.zeros(1) if cfg.act_axis is None else torch.zeros(self.in_features)
             self.register_buffer("act_absmax", init)
-            self.register_buffer("act_min", init.clone())
-            self.register_buffer("act_max", init.clone())
             self._calibrated = False
         else:
             self._calibrated = True
@@ -410,17 +430,6 @@ def run_all_schemes(
 
     return report
 
-
-# Backwards-compatible helper retained so callers of the old API don't break.
-def quantize_dynamic_int8(model: GPT2LMHeadModel) -> GPT2LMHeadModel:
-    """DEPRECATED: use ``apply_ptq(model, QuantConfig.absmax_fine_8bit(), ...)``.
-
-    Paper §5.2 uses static absmax/zeropoint PTQ, not dynamic INT8.  This shim
-    applies the ``fine`` absmax 8-bit scheme with an empty (uncalibrated)
-    model — numerically meaningless but keeps callsites alive during refactor.
-    """
-    _replace_linears(model, QuantConfig.absmax_fine_8bit())
-    return model
 
 
 def parse_args() -> argparse.Namespace:

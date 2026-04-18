@@ -13,7 +13,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from datasets import Dataset, DatasetDict, load_dataset
+from datasets import Dataset, load_dataset
 from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 
 
@@ -50,8 +50,6 @@ def load_c4(seq_len: int = 256) -> LMDataset:
     # Use streaming=True to avoid multi-terabyte downloads on the cluster
     ds = load_dataset("allenai/c4", "en", streaming=True, cache_dir=str(cache))
     
-    # Take a fixed validation set for faster eval (streaming doesn't support easy length)
-    # The paper doesn't specify val size, 5000 examples is usually plenty for P100.
     # Paper §5 evaluates on 100 000 validation samples — required for stable
     # tail statistics (kurtosis, max|activation|) on heavy-tailed distributions.
     val_subset = ds["validation"].take(100_000)

@@ -48,6 +48,18 @@ class RMSNormSingle(nn.Module):
         self.scale = nn.Parameter(torch.ones(1))
 
     def forward(self, x: Tensor) -> Tensor:
+        """Normalize ``x`` by its RMS then scale by the single shared scalar.
+
+        Args:
+            x: Input activations. Shape: ``(..., d_model)``.
+
+        Returns:
+            Normalized tensor of the same shape as ``x``.
+        """
+        assert self.scale.numel() == 1, (
+            f"RMSNormSingle.scale must be a scalar; got shape {self.scale.shape}. "
+            "A per-channel scale would reintroduce axis-privileged directions."
+        )
         # RMS normalise along the last axis, then apply shared scale
         rms = x.pow(2).mean(dim=-1, keepdim=True).add(self.eps).sqrt()
         return (x / rms) * self.scale

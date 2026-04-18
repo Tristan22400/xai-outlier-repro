@@ -8,7 +8,7 @@ import math
 import torch
 from torch import nn
 
-from xai_repro.optim.ortho_adam import OrthoAdam, _rotate, _sample_orthogonal
+from xai_repro.optim import OrthoAdam, _rotate, _sample_orthogonal
 
 
 def _toy_model(seed: int = 0) -> nn.Sequential:

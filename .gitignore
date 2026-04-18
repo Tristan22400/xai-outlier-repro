@@ -8,6 +8,11 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 runs/
+runs_new/
+runs_short_named/
+runs_smoke/
+analysis_results_v2/
+analysis_results_short/
 logs/
 wandb/
 hf_cache/

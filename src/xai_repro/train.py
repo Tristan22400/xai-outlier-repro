@@ -64,6 +64,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--smoke", action="store_true", help="Short smoke-test run (200 steps).")
     p.add_argument("--beta2", type=float, default=None, help="Override Adam beta2.")
     p.add_argument("--run_name", type=str, default=None, help="Override W&B run name.")
+    p.add_argument("--wallclock_hours", type=float, default=None, help="Override wallclock_hours from config.")
+    p.add_argument("--max_rotate_dim", type=int, default=None, help="Override orthoadam.max_rotate_dim from config.")
+    p.add_argument("--lr", type=float, default=None, help="Override learning_rate from config.")
     return p.parse_args()
 
 
@@ -73,6 +76,7 @@ def main() -> None:
     tcfg = cfg["training"]
 
     max_steps = args.max_steps or tcfg["max_steps"]
+    effective_lr = args.lr if args.lr is not None else tcfg["learning_rate"]
     if args.smoke:
         max_steps = 200
 
@@ -96,7 +100,7 @@ def main() -> None:
         per_device_train_batch_size=tcfg["per_device_train_batch_size"],
         per_device_eval_batch_size=tcfg["per_device_eval_batch_size"],
         gradient_accumulation_steps=tcfg["gradient_accumulation_steps"],
-        learning_rate=tcfg["learning_rate"],
+        learning_rate=effective_lr,
         lr_scheduler_type=tcfg["lr_scheduler_type"],
         warmup_steps=tcfg["warmup_steps"],
         weight_decay=tcfg["weight_decay"],
@@ -121,7 +125,7 @@ def main() -> None:
 
     callbacks = [
         MFUCallback(n_params=n_params, tokens_per_step=tokens_per_step),
-        WallclockStopCallback(max_hours=tcfg["wallclock_hours"]),
+        WallclockStopCallback(max_hours=args.wallclock_hours if args.wallclock_hours is not None else tcfg["wallclock_hours"]),
     ]
 
     trainer_kwargs: dict[str, Any] = dict(
@@ -142,7 +146,7 @@ def main() -> None:
             **trainer_kwargs,
             orthoadam_kwargs={
                 "weight_decay": tcfg["weight_decay"],
-                "max_rotate_dim": cfg["orthoadam"]["max_rotate_dim"],
+                "max_rotate_dim": args.max_rotate_dim if args.max_rotate_dim is not None else cfg["orthoadam"]["max_rotate_dim"],
                 "seed": cfg["orthoadam"]["seed"],
                 "betas": (tcfg["adam_beta1"], ortho_beta2),
             },

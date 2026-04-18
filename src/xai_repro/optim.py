@@ -23,22 +23,61 @@ from torch.optim.optimizer import Optimizer
 
 
 def _sample_orthogonal(dim: int, generator: torch.Generator, device: torch.device) -> Tensor:
-    """Draw a Haar-distributed random orthogonal matrix via QR decomposition."""
+    """Draw a Haar-distributed random orthogonal matrix via QR decomposition.
+
+    Uses the QR sign-correction trick (Mezzadri, 2007) to ensure the output
+    is uniformly distributed over O(dim) rather than biased toward the upper
+    Hessenberg form produced by ``torch.linalg.qr``.
+
+    Args:
+        dim: Size of the square matrix.
+        generator: Seeded RNG (ensures reproducibility across optimizer steps).
+        device: Target device for the matrix.
+
+    Returns:
+        Orthogonal matrix Q of shape ``(dim, dim)``, satisfying ``Q @ Q.T = I``.
+    """
+    assert dim >= 2, f"Rotation requires dim ≥ 2, got {dim}"
     a = torch.randn(dim, dim, generator=generator, device=device, dtype=torch.float32)
     q, r = torch.linalg.qr(a)
     return q * torch.sign(torch.diagonal(r)).unsqueeze(0)
 
 
 def _rotate(x: Tensor, qs: list[Tensor | None], transpose: bool) -> Tensor:
-    """Apply axis-wise Kronecker rotation ⊗ᵢ Qᵢ (or its transpose) to x."""
+    """Apply an axis-wise Kronecker rotation ``⊗ᵢ Qᵢ`` (or its transpose) to ``x``.
+
+    For each axis ``i`` where ``qs[i]`` is not ``None``, the corresponding
+    orthogonal matrix is applied as a matrix multiplication along that axis.
+    Axes with ``None`` are left unchanged (identity rotation).
+
+    Args:
+        x: Parameter or gradient tensor of arbitrary shape.
+        qs: List of orthogonal matrices (or ``None`` for identity), one per
+            axis of ``x``. ``qs[i]`` has shape ``(x.shape[i], x.shape[i])``.
+        transpose: If ``True``, apply ``Qᵢᵀ`` (the inverse rotation, used to
+            map the Adam step back from the rotated basis to the original basis).
+
+    Returns:
+        Rotated tensor of the same shape as ``x``.
+    """
     out = x
     for i, q in enumerate(qs):
         if q is None:
             continue
+        assert q.ndim == 2 and q.shape[0] == q.shape[1], (
+            f"Rotation matrix at axis {i} must be square; got shape {q.shape}"
+        )
+        assert q.shape[0] == x.shape[i], (
+            f"Rotation matrix dim {q.shape[0]} does not match tensor axis {i} "
+            f"(size {x.shape[i]})"
+        )
         mat = q.t() if transpose else q
         moved = out.movedim(i, 0)
         shape = moved.shape
         out = (mat @ moved.reshape(shape[0], -1)).reshape(shape).movedim(0, i)
+    assert out.shape == x.shape, (
+        f"Rotation changed tensor shape: {x.shape} → {out.shape}"
+    )
     return out
 
 
@@ -117,6 +156,9 @@ class OrthoAdam(Optimizer):
                 m, v, qs = state["m"], state["v"], state["qs"]
 
                 g = _rotate(p.grad, qs, transpose=False)
+                assert g.shape == p.grad.shape, (
+                    f"Rotation must preserve gradient shape; got {g.shape} vs {p.grad.shape}"
+                )
                 m.mul_(beta1).add_(g, alpha=1 - beta1)
                 v.mul_(beta2).addcmul_(g, g, value=1 - beta2)
 

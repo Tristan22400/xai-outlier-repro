@@ -75,9 +75,7 @@ git clone <this repo>
 cd xai-outlier-repro
 bash scripts/setup_cluster.sh     
 sbatch scripts/run_baseline.sbatch
-sbatch scripts/run_softmax1.sbatch
-sbatch scripts/run_orthoadam.sbatch
-sbatch scripts/run_run_joint.sbatch
+
 ```
 
 After each job finishes, verify health:

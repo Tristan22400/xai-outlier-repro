@@ -1,8 +1,6 @@
 # xai-outlier-repro
 
-Reproducing two interventions that are claimed to eliminate the
-activation-outlier / privileged-basis pathology in small transformer
-language models:
+Reproducing two interventions that are claimed to eliminate the attention sink and  activation-outlier in small transformer language models, both in isolation and jointly:
 
 1. **softmax-1** (Miller, *Attention Is Off By One*) — replaces
    `softmax(x)` in attention with `exp(x_i) / (1 + Σ exp(x_j))`, letting
@@ -10,10 +8,12 @@ language models:
 2. **OrthoAdam** — performs Adam's per-coordinate moment updates in a
    random orthogonal basis per parameter, breaking the coordinate-wise
    privilege that Adam otherwise injects.
+3. **Joint intervention** — softmax-1 + OrthoAdam combined, to verify
+   the two interventions do not interact antagonistically.
 
-Three ~60M-parameter GPT-2 models are trained under **identical data and
-schedule** on WikiText-103, on a single NVIDIA P100 via Slurm, and
-compared on three metrics:
+Four ~60M-parameter GPT-2 variants (baseline, softmax-1, OrthoAdam,
+joint) are trained under **identical data and schedule** on a subset of
+C4, on a single NVIDIA P100 via Slurm, and compared on three metrics:
 
 | Metric | Implementation |
 |---|---|
@@ -32,16 +32,16 @@ src/xai_repro/
 ├── attention/softmax1.py       # GPT2Attention subclass
 ├── optim/ortho_adam.py         # torch.optim.Optimizer subclass (Kronecker Q)
 ├── model.py                    # 60M GPT-2 factory
-├── data.py                     # WikiText-103 pipeline
+├── data.py                     # C4 pipeline
 ├── train.py                    # HF Trainer entrypoint
 ├── callbacks/{mfu,walltime}.py # MFU logging, 34h stop
 └── analysis/                   # wandb_health, kurtosis, ptq_int8
 configs/gpt2_60m.yaml           # single source of truth for HPs
-scripts/                        # setup_cluster.sh + 3 sbatch files
+scripts/                        # setup_cluster.sh + 4 sbatch files
 tests/                          # pytest: softmax1, ortho_adam, mfu
 ```
 
-## Hyperparameters (all three variants — do not tune per variant)
+## Hyperparameters (all four variants — do not tune per variant)
 
 | | |
 |---|---|
@@ -73,10 +73,11 @@ mypy src
 ssh gpu-telecom
 git clone <this repo>
 cd xai-outlier-repro
-bash scripts/setup_cluster.sh     # one-shot miniconda + env
+bash scripts/setup_cluster.sh     
 sbatch scripts/run_baseline.sbatch
 sbatch scripts/run_softmax1.sbatch
 sbatch scripts/run_orthoadam.sbatch
+sbatch scripts/run_run_joint.sbatch
 ```
 
 After each job finishes, verify health:
@@ -89,8 +90,6 @@ python -m xai_repro.analysis.ptq_int8  --checkpoint runs/<variant>/final --confi
 
 ## Known deviations from the papers
 
-- **WikiText-103** instead of C4 — the P100 budget cannot converge on C4
-  in 36h.
 - **OrthoAdam vocab axis is identity**: the full `50257² ≈ 2.5 × 10⁹`
   rotation is infeasible. `max_rotate_dim=4096` skips any axis beyond
   that, so only the 512-dim side of the embedding is rotated.

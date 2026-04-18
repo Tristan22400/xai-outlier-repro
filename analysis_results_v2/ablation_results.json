@@ -1,0 +1,1454 @@
+[
+  {
+    "experiment": "baseline",
+    "seq_len": 512,
+    "argmax_pct_key0": 63.213,
+    "mass_pct_key0": 36.906,
+    "first_token": "A",
+    "model": "openai-community/gpt2"
+  },
+  {
+    "experiment": "swap@0",
+    "swap_pos": 0,
+    "original_token": "A",
+    "original_token_id": 32,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 63.213,
+        "base_mass": 36.906,
+        "swap_argmax": 63.251,
+        "swap_mass": 36.804,
+        "delta_argmax": 0.038,
+        "delta_mass": -0.102
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.065,
+        "base_mass": 0.363,
+        "swap_argmax": 0.037,
+        "swap_mass": 0.318,
+        "delta_argmax": -0.028,
+        "delta_mass": -0.045
+      },
+      {
+        "key": 2,
+        "base_argmax": 0.079,
+        "base_mass": 0.356,
+        "swap_argmax": 0.043,
+        "swap_mass": 0.309,
+        "delta_argmax": -0.036,
+        "delta_mass": -0.047
+      },
+      {
+        "key": 3,
+        "base_argmax": 0.095,
+        "base_mass": 0.287,
+        "swap_argmax": 0.102,
+        "swap_mass": 0.283,
+        "delta_argmax": 0.007,
+        "delta_mass": -0.004
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.077,
+        "base_mass": 0.241,
+        "swap_argmax": 0.062,
+        "swap_mass": 0.217,
+        "delta_argmax": -0.015,
+        "delta_mass": -0.024
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.11,
+        "base_mass": 0.331,
+        "swap_argmax": 0.081,
+        "swap_mass": 0.319,
+        "delta_argmax": -0.029,
+        "delta_mass": -0.012
+      }
+    ],
+    "model": "openai-community/gpt2"
+  },
+  {
+    "experiment": "swap@9",
+    "swap_pos": 9,
+    "original_token": " of",
+    "original_token_id": 286,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 63.213,
+        "base_mass": 36.906,
+        "swap_argmax": 63.154,
+        "swap_mass": 36.783,
+        "delta_argmax": -0.059,
+        "delta_mass": -0.123
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.065,
+        "base_mass": 0.363,
+        "swap_argmax": 0.069,
+        "swap_mass": 0.365,
+        "delta_argmax": 0.004,
+        "delta_mass": 0.002
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.077,
+        "base_mass": 0.241,
+        "swap_argmax": 0.079,
+        "swap_mass": 0.244,
+        "delta_argmax": 0.002,
+        "delta_mass": 0.003
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.11,
+        "base_mass": 0.331,
+        "swap_argmax": 0.106,
+        "swap_mass": 0.332,
+        "delta_argmax": -0.004,
+        "delta_mass": 0.001
+      },
+      {
+        "key": 6,
+        "base_argmax": 0.087,
+        "base_mass": 0.29,
+        "swap_argmax": 0.083,
+        "swap_mass": 0.289,
+        "delta_argmax": -0.004,
+        "delta_mass": -0.001
+      },
+      {
+        "key": 7,
+        "base_argmax": 0.096,
+        "base_mass": 0.27,
+        "swap_argmax": 0.096,
+        "swap_mass": 0.271,
+        "delta_argmax": 0.0,
+        "delta_mass": 0.001
+      },
+      {
+        "key": 8,
+        "base_argmax": 0.123,
+        "base_mass": 0.371,
+        "swap_argmax": 0.114,
+        "swap_mass": 0.364,
+        "delta_argmax": -0.009,
+        "delta_mass": -0.007
+      },
+      {
+        "key": 9,
+        "base_argmax": 0.054,
+        "base_mass": 0.199,
+        "swap_argmax": 0.054,
+        "swap_mass": 0.191,
+        "delta_argmax": 0.0,
+        "delta_mass": -0.008
+      },
+      {
+        "key": 10,
+        "base_argmax": 0.163,
+        "base_mass": 0.401,
+        "swap_argmax": 0.132,
+        "swap_mass": 0.382,
+        "delta_argmax": -0.031,
+        "delta_mass": -0.019
+      },
+      {
+        "key": 11,
+        "base_argmax": 0.243,
+        "base_mass": 0.396,
+        "swap_argmax": 0.259,
+        "swap_mass": 0.408,
+        "delta_argmax": 0.016,
+        "delta_mass": 0.012
+      },
+      {
+        "key": 12,
+        "base_argmax": 0.134,
+        "base_mass": 0.3,
+        "swap_argmax": 0.129,
+        "swap_mass": 0.298,
+        "delta_argmax": -0.005,
+        "delta_mass": -0.002
+      },
+      {
+        "key": 13,
+        "base_argmax": 0.068,
+        "base_mass": 0.218,
+        "swap_argmax": 0.066,
+        "swap_mass": 0.217,
+        "delta_argmax": -0.002,
+        "delta_mass": -0.001
+      },
+      {
+        "key": 14,
+        "base_argmax": 0.088,
+        "base_mass": 0.229,
+        "swap_argmax": 0.08,
+        "swap_mass": 0.244,
+        "delta_argmax": -0.008,
+        "delta_mass": 0.015
+      }
+    ],
+    "model": "openai-community/gpt2"
+  },
+  {
+    "experiment": "swap@50",
+    "swap_pos": 50,
+    "original_token": " conditioning",
+    "original_token_id": 21143,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 63.213,
+        "base_mass": 36.906,
+        "swap_argmax": 63.068,
+        "swap_mass": 36.671,
+        "delta_argmax": -0.145,
+        "delta_mass": -0.235
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.065,
+        "base_mass": 0.363,
+        "swap_argmax": 0.066,
+        "swap_mass": 0.364,
+        "delta_argmax": 0.001,
+        "delta_mass": 0.001
+      },
+      {
+        "key": 45,
+        "base_argmax": 0.129,
+        "base_mass": 0.158,
+        "swap_argmax": 0.127,
+        "swap_mass": 0.161,
+        "delta_argmax": -0.002,
+        "delta_mass": 0.003
+      },
+      {
+        "key": 46,
+        "base_argmax": 0.13,
+        "base_mass": 0.238,
+        "swap_argmax": 0.138,
+        "swap_mass": 0.243,
+        "delta_argmax": 0.008,
+        "delta_mass": 0.005
+      },
+      {
+        "key": 47,
+        "base_argmax": 0.062,
+        "base_mass": 0.181,
+        "swap_argmax": 0.066,
+        "swap_mass": 0.187,
+        "delta_argmax": 0.004,
+        "delta_mass": 0.006
+      },
+      {
+        "key": 48,
+        "base_argmax": 0.068,
+        "base_mass": 0.214,
+        "swap_argmax": 0.085,
+        "swap_mass": 0.224,
+        "delta_argmax": 0.017,
+        "delta_mass": 0.01
+      },
+      {
+        "key": 49,
+        "base_argmax": 0.107,
+        "base_mass": 0.196,
+        "swap_argmax": 0.113,
+        "swap_mass": 0.214,
+        "delta_argmax": 0.006,
+        "delta_mass": 0.018
+      },
+      {
+        "key": 50,
+        "base_argmax": 0.138,
+        "base_mass": 0.262,
+        "swap_argmax": 0.065,
+        "swap_mass": 0.165,
+        "delta_argmax": -0.073,
+        "delta_mass": -0.097
+      },
+      {
+        "key": 51,
+        "base_argmax": 0.065,
+        "base_mass": 0.199,
+        "swap_argmax": 0.064,
+        "swap_mass": 0.174,
+        "delta_argmax": -0.001,
+        "delta_mass": -0.025
+      },
+      {
+        "key": 52,
+        "base_argmax": 0.126,
+        "base_mass": 0.235,
+        "swap_argmax": 0.123,
+        "swap_mass": 0.219,
+        "delta_argmax": -0.003,
+        "delta_mass": -0.016
+      },
+      {
+        "key": 53,
+        "base_argmax": 0.035,
+        "base_mass": 0.11,
+        "swap_argmax": 0.03,
+        "swap_mass": 0.102,
+        "delta_argmax": -0.005,
+        "delta_mass": -0.008
+      },
+      {
+        "key": 54,
+        "base_argmax": 0.14,
+        "base_mass": 0.339,
+        "swap_argmax": 0.137,
+        "swap_mass": 0.33,
+        "delta_argmax": -0.003,
+        "delta_mass": -0.009
+      },
+      {
+        "key": 55,
+        "base_argmax": 0.156,
+        "base_mass": 0.308,
+        "swap_argmax": 0.163,
+        "swap_mass": 0.319,
+        "delta_argmax": 0.007,
+        "delta_mass": 0.011
+      }
+    ],
+    "model": "openai-community/gpt2"
+  },
+  {
+    "experiment": "length_sweep",
+    "rows": [
+      {
+        "seq_len": 32,
+        "argmax_pct_key0": 73.459,
+        "mass_pct_key0": 52.258
+      },
+      {
+        "seq_len": 128,
+        "argmax_pct_key0": 68.799,
+        "mass_pct_key0": 43.176
+      },
+      {
+        "seq_len": 512,
+        "argmax_pct_key0": 63.213,
+        "mass_pct_key0": 36.906
+      },
+      {
+        "seq_len": 1024,
+        "argmax_pct_key0": 59.534,
+        "mass_pct_key0": 35.789
+      },
+      {
+        "seq_len": 2048,
+        "skipped": "exceeds model max 1024"
+      }
+    ],
+    "model": "openai-community/gpt2"
+  },
+  {
+    "experiment": "zero_pe",
+    "seq_len": 512,
+    "argmax_pct_key0": 24.15,
+    "mass_pct_key0": 9.307,
+    "note": "PSEUDO ablation — model trained WITH PE; PPL degrades. If sink persists => learned PE pattern is not the cause. If sink vanishes => inconclusive (model may simply be broken).",
+    "model": "openai-community/gpt2"
+  },
+  {
+    "experiment": "baseline",
+    "seq_len": 512,
+    "argmax_pct_key0": 68.216,
+    "mass_pct_key0": 42.166,
+    "first_token": "A",
+    "model": "openai-community/gpt2-medium"
+  },
+  {
+    "experiment": "swap@0",
+    "swap_pos": 0,
+    "original_token": "A",
+    "original_token_id": 32,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 68.216,
+        "base_mass": 42.166,
+        "swap_argmax": 68.001,
+        "swap_mass": 41.941,
+        "delta_argmax": -0.215,
+        "delta_mass": -0.225
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.097,
+        "base_mass": 0.379,
+        "swap_argmax": 0.07,
+        "swap_mass": 0.347,
+        "delta_argmax": -0.027,
+        "delta_mass": -0.032
+      },
+      {
+        "key": 2,
+        "base_argmax": 0.12,
+        "base_mass": 0.377,
+        "swap_argmax": 0.102,
+        "swap_mass": 0.338,
+        "delta_argmax": -0.018,
+        "delta_mass": -0.039
+      },
+      {
+        "key": 3,
+        "base_argmax": 0.255,
+        "base_mass": 0.349,
+        "swap_argmax": 0.257,
+        "swap_mass": 0.344,
+        "delta_argmax": 0.002,
+        "delta_mass": -0.005
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.11,
+        "base_mass": 0.278,
+        "swap_argmax": 0.136,
+        "swap_mass": 0.246,
+        "delta_argmax": 0.026,
+        "delta_mass": -0.032
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.07,
+        "base_mass": 0.32,
+        "swap_argmax": 0.058,
+        "swap_mass": 0.308,
+        "delta_argmax": -0.012,
+        "delta_mass": -0.012
+      }
+    ],
+    "model": "openai-community/gpt2-medium"
+  },
+  {
+    "experiment": "swap@9",
+    "swap_pos": 9,
+    "original_token": " of",
+    "original_token_id": 286,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 68.216,
+        "base_mass": 42.166,
+        "swap_argmax": 68.19,
+        "swap_mass": 42.07,
+        "delta_argmax": -0.026,
+        "delta_mass": -0.096
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.097,
+        "base_mass": 0.379,
+        "swap_argmax": 0.095,
+        "swap_mass": 0.379,
+        "delta_argmax": -0.002,
+        "delta_mass": 0.0
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.11,
+        "base_mass": 0.278,
+        "swap_argmax": 0.111,
+        "swap_mass": 0.28,
+        "delta_argmax": 0.001,
+        "delta_mass": 0.002
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.07,
+        "base_mass": 0.32,
+        "swap_argmax": 0.072,
+        "swap_mass": 0.323,
+        "delta_argmax": 0.002,
+        "delta_mass": 0.003
+      },
+      {
+        "key": 6,
+        "base_argmax": 0.06,
+        "base_mass": 0.3,
+        "swap_argmax": 0.066,
+        "swap_mass": 0.304,
+        "delta_argmax": 0.006,
+        "delta_mass": 0.004
+      },
+      {
+        "key": 7,
+        "base_argmax": 0.066,
+        "base_mass": 0.278,
+        "swap_argmax": 0.06,
+        "swap_mass": 0.278,
+        "delta_argmax": -0.006,
+        "delta_mass": 0.0
+      },
+      {
+        "key": 8,
+        "base_argmax": 0.078,
+        "base_mass": 0.337,
+        "swap_argmax": 0.077,
+        "swap_mass": 0.339,
+        "delta_argmax": -0.001,
+        "delta_mass": 0.002
+      },
+      {
+        "key": 9,
+        "base_argmax": 0.111,
+        "base_mass": 0.222,
+        "swap_argmax": 0.078,
+        "swap_mass": 0.213,
+        "delta_argmax": -0.033,
+        "delta_mass": -0.009
+      },
+      {
+        "key": 10,
+        "base_argmax": 0.114,
+        "base_mass": 0.329,
+        "swap_argmax": 0.085,
+        "swap_mass": 0.293,
+        "delta_argmax": -0.029,
+        "delta_mass": -0.036
+      },
+      {
+        "key": 11,
+        "base_argmax": 0.348,
+        "base_mass": 0.5,
+        "swap_argmax": 0.397,
+        "swap_mass": 0.519,
+        "delta_argmax": 0.049,
+        "delta_mass": 0.019
+      },
+      {
+        "key": 12,
+        "base_argmax": 0.078,
+        "base_mass": 0.267,
+        "swap_argmax": 0.079,
+        "swap_mass": 0.273,
+        "delta_argmax": 0.001,
+        "delta_mass": 0.006
+      },
+      {
+        "key": 13,
+        "base_argmax": 0.082,
+        "base_mass": 0.224,
+        "swap_argmax": 0.081,
+        "swap_mass": 0.223,
+        "delta_argmax": -0.001,
+        "delta_mass": -0.001
+      },
+      {
+        "key": 14,
+        "base_argmax": 0.066,
+        "base_mass": 0.203,
+        "swap_argmax": 0.072,
+        "swap_mass": 0.239,
+        "delta_argmax": 0.006,
+        "delta_mass": 0.036
+      }
+    ],
+    "model": "openai-community/gpt2-medium"
+  },
+  {
+    "experiment": "swap@50",
+    "swap_pos": 50,
+    "original_token": " conditioning",
+    "original_token_id": 21143,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 68.216,
+        "base_mass": 42.166,
+        "swap_argmax": 68.001,
+        "swap_mass": 41.705,
+        "delta_argmax": -0.215,
+        "delta_mass": -0.461
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.097,
+        "base_mass": 0.379,
+        "swap_argmax": 0.097,
+        "swap_mass": 0.38,
+        "delta_argmax": 0.0,
+        "delta_mass": 0.001
+      },
+      {
+        "key": 45,
+        "base_argmax": 0.094,
+        "base_mass": 0.181,
+        "swap_argmax": 0.094,
+        "swap_mass": 0.183,
+        "delta_argmax": 0.0,
+        "delta_mass": 0.002
+      },
+      {
+        "key": 46,
+        "base_argmax": 0.111,
+        "base_mass": 0.232,
+        "swap_argmax": 0.114,
+        "swap_mass": 0.238,
+        "delta_argmax": 0.003,
+        "delta_mass": 0.006
+      },
+      {
+        "key": 47,
+        "base_argmax": 0.054,
+        "base_mass": 0.162,
+        "swap_argmax": 0.055,
+        "swap_mass": 0.169,
+        "delta_argmax": 0.001,
+        "delta_mass": 0.007
+      },
+      {
+        "key": 48,
+        "base_argmax": 0.066,
+        "base_mass": 0.202,
+        "swap_argmax": 0.07,
+        "swap_mass": 0.21,
+        "delta_argmax": 0.004,
+        "delta_mass": 0.008
+      },
+      {
+        "key": 49,
+        "base_argmax": 0.107,
+        "base_mass": 0.199,
+        "swap_argmax": 0.121,
+        "swap_mass": 0.213,
+        "delta_argmax": 0.014,
+        "delta_mass": 0.014
+      },
+      {
+        "key": 50,
+        "base_argmax": 0.12,
+        "base_mass": 0.306,
+        "swap_argmax": 0.076,
+        "swap_mass": 0.158,
+        "delta_argmax": -0.044,
+        "delta_mass": -0.148
+      },
+      {
+        "key": 51,
+        "base_argmax": 0.074,
+        "base_mass": 0.182,
+        "swap_argmax": 0.064,
+        "swap_mass": 0.174,
+        "delta_argmax": -0.01,
+        "delta_mass": -0.008
+      },
+      {
+        "key": 52,
+        "base_argmax": 0.066,
+        "base_mass": 0.191,
+        "swap_argmax": 0.067,
+        "swap_mass": 0.192,
+        "delta_argmax": 0.001,
+        "delta_mass": 0.001
+      },
+      {
+        "key": 53,
+        "base_argmax": 0.033,
+        "base_mass": 0.113,
+        "swap_argmax": 0.028,
+        "swap_mass": 0.109,
+        "delta_argmax": -0.005,
+        "delta_mass": -0.004
+      },
+      {
+        "key": 54,
+        "base_argmax": 0.112,
+        "base_mass": 0.278,
+        "swap_argmax": 0.161,
+        "swap_mass": 0.311,
+        "delta_argmax": 0.049,
+        "delta_mass": 0.033
+      },
+      {
+        "key": 55,
+        "base_argmax": 0.12,
+        "base_mass": 0.297,
+        "swap_argmax": 0.145,
+        "swap_mass": 0.339,
+        "delta_argmax": 0.025,
+        "delta_mass": 0.042
+      }
+    ],
+    "model": "openai-community/gpt2-medium"
+  },
+  {
+    "experiment": "length_sweep",
+    "rows": [
+      {
+        "seq_len": 32,
+        "argmax_pct_key0": 78.882,
+        "mass_pct_key0": 58.815
+      },
+      {
+        "seq_len": 128,
+        "argmax_pct_key0": 73.643,
+        "mass_pct_key0": 48.777
+      },
+      {
+        "seq_len": 512,
+        "argmax_pct_key0": 68.216,
+        "mass_pct_key0": 42.166
+      },
+      {
+        "seq_len": 1024,
+        "argmax_pct_key0": 64.714,
+        "mass_pct_key0": 41.806
+      },
+      {
+        "seq_len": 2048,
+        "skipped": "exceeds model max 1024"
+      }
+    ],
+    "model": "openai-community/gpt2-medium"
+  },
+  {
+    "experiment": "zero_pe",
+    "seq_len": 512,
+    "argmax_pct_key0": 0.882,
+    "mass_pct_key0": 2.696,
+    "note": "PSEUDO ablation — model trained WITH PE; PPL degrades. If sink persists => learned PE pattern is not the cause. If sink vanishes => inconclusive (model may simply be broken).",
+    "model": "openai-community/gpt2-medium"
+  },
+  {
+    "experiment": "baseline",
+    "seq_len": 512,
+    "argmax_pct_key0": 1.046,
+    "mass_pct_key0": 2.02,
+    "first_token": "A",
+    "model": "EleutherAI/pythia-31m"
+  },
+  {
+    "experiment": "swap@0",
+    "swap_pos": 0,
+    "original_token": "A",
+    "original_token_id": 34,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 1.046,
+        "base_mass": 2.02,
+        "swap_argmax": 1.143,
+        "swap_mass": 2.348,
+        "delta_argmax": 0.097,
+        "delta_mass": 0.328
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.155,
+        "base_mass": 0.348,
+        "swap_argmax": 0.146,
+        "swap_mass": 0.343,
+        "delta_argmax": -0.009,
+        "delta_mass": -0.005
+      },
+      {
+        "key": 2,
+        "base_argmax": 0.224,
+        "base_mass": 0.368,
+        "swap_argmax": 0.167,
+        "swap_mass": 0.329,
+        "delta_argmax": -0.057,
+        "delta_mass": -0.039
+      },
+      {
+        "key": 3,
+        "base_argmax": 0.281,
+        "base_mass": 0.376,
+        "swap_argmax": 0.264,
+        "swap_mass": 0.376,
+        "delta_argmax": -0.017,
+        "delta_mass": 0.0
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.232,
+        "base_mass": 0.314,
+        "swap_argmax": 0.228,
+        "swap_mass": 0.337,
+        "delta_argmax": -0.004,
+        "delta_mass": 0.023
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.264,
+        "base_mass": 0.349,
+        "swap_argmax": 0.273,
+        "swap_mass": 0.341,
+        "delta_argmax": 0.009,
+        "delta_mass": -0.008
+      }
+    ],
+    "model": "EleutherAI/pythia-31m"
+  },
+  {
+    "experiment": "swap@9",
+    "swap_pos": 9,
+    "original_token": " of",
+    "original_token_id": 273,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 1.046,
+        "base_mass": 2.02,
+        "swap_argmax": 0.993,
+        "swap_mass": 1.974,
+        "delta_argmax": -0.053,
+        "delta_mass": -0.046
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.155,
+        "base_mass": 0.348,
+        "swap_argmax": 0.138,
+        "swap_mass": 0.332,
+        "delta_argmax": -0.017,
+        "delta_mass": -0.016
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.232,
+        "base_mass": 0.314,
+        "swap_argmax": 0.228,
+        "swap_mass": 0.314,
+        "delta_argmax": -0.004,
+        "delta_mass": 0.0
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.264,
+        "base_mass": 0.349,
+        "swap_argmax": 0.232,
+        "swap_mass": 0.33,
+        "delta_argmax": -0.032,
+        "delta_mass": -0.019
+      },
+      {
+        "key": 6,
+        "base_argmax": 0.106,
+        "base_mass": 0.196,
+        "swap_argmax": 0.102,
+        "swap_mass": 0.188,
+        "delta_argmax": -0.004,
+        "delta_mass": -0.008
+      },
+      {
+        "key": 7,
+        "base_argmax": 0.134,
+        "base_mass": 0.173,
+        "swap_argmax": 0.118,
+        "swap_mass": 0.154,
+        "delta_argmax": -0.016,
+        "delta_mass": -0.019
+      },
+      {
+        "key": 8,
+        "base_argmax": 0.37,
+        "base_mass": 0.393,
+        "swap_argmax": 0.256,
+        "swap_mass": 0.349,
+        "delta_argmax": -0.114,
+        "delta_mass": -0.044
+      },
+      {
+        "key": 9,
+        "base_argmax": 0.313,
+        "base_mass": 0.692,
+        "swap_argmax": 0.289,
+        "swap_mass": 0.327,
+        "delta_argmax": -0.024,
+        "delta_mass": -0.365
+      },
+      {
+        "key": 10,
+        "base_argmax": 0.403,
+        "base_mass": 0.503,
+        "swap_argmax": 0.317,
+        "swap_mass": 0.396,
+        "delta_argmax": -0.086,
+        "delta_mass": -0.107
+      },
+      {
+        "key": 11,
+        "base_argmax": 1.607,
+        "base_mass": 3.91,
+        "swap_argmax": 1.937,
+        "swap_mass": 4.199,
+        "delta_argmax": 0.33,
+        "delta_mass": 0.289
+      },
+      {
+        "key": 12,
+        "base_argmax": 0.248,
+        "base_mass": 0.266,
+        "swap_argmax": 0.232,
+        "swap_mass": 0.274,
+        "delta_argmax": -0.016,
+        "delta_mass": 0.008
+      },
+      {
+        "key": 13,
+        "base_argmax": 0.11,
+        "base_mass": 0.191,
+        "swap_argmax": 0.118,
+        "swap_mass": 0.194,
+        "delta_argmax": 0.008,
+        "delta_mass": 0.003
+      },
+      {
+        "key": 14,
+        "base_argmax": 0.09,
+        "base_mass": 0.193,
+        "swap_argmax": 0.09,
+        "swap_mass": 0.2,
+        "delta_argmax": 0.0,
+        "delta_mass": 0.007
+      }
+    ],
+    "model": "EleutherAI/pythia-31m"
+  },
+  {
+    "experiment": "swap@50",
+    "swap_pos": 50,
+    "original_token": " each",
+    "original_token_id": 1016,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 1.046,
+        "base_mass": 2.02,
+        "swap_argmax": 1.054,
+        "swap_mass": 2.013,
+        "delta_argmax": 0.008,
+        "delta_mass": -0.007
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.155,
+        "base_mass": 0.348,
+        "swap_argmax": 0.155,
+        "swap_mass": 0.336,
+        "delta_argmax": 0.0,
+        "delta_mass": -0.012
+      },
+      {
+        "key": 45,
+        "base_argmax": 0.179,
+        "base_mass": 0.204,
+        "swap_argmax": 0.179,
+        "swap_mass": 0.186,
+        "delta_argmax": 0.0,
+        "delta_mass": -0.018
+      },
+      {
+        "key": 46,
+        "base_argmax": 0.134,
+        "base_mass": 0.153,
+        "swap_argmax": 0.118,
+        "swap_mass": 0.14,
+        "delta_argmax": -0.016,
+        "delta_mass": -0.013
+      },
+      {
+        "key": 47,
+        "base_argmax": 0.122,
+        "base_mass": 0.186,
+        "swap_argmax": 0.09,
+        "swap_mass": 0.166,
+        "delta_argmax": -0.032,
+        "delta_mass": -0.02
+      },
+      {
+        "key": 48,
+        "base_argmax": 0.179,
+        "base_mass": 0.195,
+        "swap_argmax": 0.171,
+        "swap_mass": 0.184,
+        "delta_argmax": -0.008,
+        "delta_mass": -0.011
+      },
+      {
+        "key": 49,
+        "base_argmax": 0.155,
+        "base_mass": 0.201,
+        "swap_argmax": 0.106,
+        "swap_mass": 0.155,
+        "delta_argmax": -0.049,
+        "delta_mass": -0.046
+      },
+      {
+        "key": 50,
+        "base_argmax": 0.195,
+        "base_mass": 0.174,
+        "swap_argmax": 0.476,
+        "swap_mass": 0.385,
+        "delta_argmax": 0.281,
+        "delta_mass": 0.211
+      },
+      {
+        "key": 51,
+        "base_argmax": 0.122,
+        "base_mass": 0.155,
+        "swap_argmax": 0.159,
+        "swap_mass": 0.188,
+        "delta_argmax": 0.037,
+        "delta_mass": 0.033
+      },
+      {
+        "key": 52,
+        "base_argmax": 0.069,
+        "base_mass": 0.159,
+        "swap_argmax": 0.053,
+        "swap_mass": 0.16,
+        "delta_argmax": -0.016,
+        "delta_mass": 0.001
+      },
+      {
+        "key": 53,
+        "base_argmax": 0.126,
+        "base_mass": 0.204,
+        "swap_argmax": 0.175,
+        "swap_mass": 0.247,
+        "delta_argmax": 0.049,
+        "delta_mass": 0.043
+      },
+      {
+        "key": 54,
+        "base_argmax": 0.134,
+        "base_mass": 0.203,
+        "swap_argmax": 0.171,
+        "swap_mass": 0.269,
+        "delta_argmax": 0.037,
+        "delta_mass": 0.066
+      },
+      {
+        "key": 55,
+        "base_argmax": 0.187,
+        "base_mass": 0.204,
+        "swap_argmax": 0.199,
+        "swap_mass": 0.228,
+        "delta_argmax": 0.012,
+        "delta_mass": 0.024
+      }
+    ],
+    "model": "EleutherAI/pythia-31m"
+  },
+  {
+    "experiment": "length_sweep",
+    "rows": [
+      {
+        "seq_len": 32,
+        "argmax_pct_key0": 16.406,
+        "mass_pct_key0": 17.285
+      },
+      {
+        "seq_len": 128,
+        "argmax_pct_key0": 4.15,
+        "mass_pct_key0": 5.593
+      },
+      {
+        "seq_len": 512,
+        "argmax_pct_key0": 1.046,
+        "mass_pct_key0": 2.02
+      },
+      {
+        "seq_len": 1024,
+        "argmax_pct_key0": 0.521,
+        "mass_pct_key0": 1.328
+      },
+      {
+        "seq_len": 2048,
+        "argmax_pct_key0": 0.261,
+        "mass_pct_key0": 0.739
+      }
+    ],
+    "model": "EleutherAI/pythia-31m"
+  },
+  {
+    "experiment": "zero_pe",
+    "skipped": "no wpe module (not GPT-2 style)",
+    "model": "EleutherAI/pythia-31m"
+  },
+  {
+    "experiment": "baseline",
+    "seq_len": 512,
+    "argmax_pct_key0": 4.521,
+    "mass_pct_key0": 7.901,
+    "first_token": "A",
+    "model": "EleutherAI/pythia-160m"
+  },
+  {
+    "experiment": "swap@0",
+    "swap_pos": 0,
+    "original_token": "A",
+    "original_token_id": 34,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 4.521,
+        "base_mass": 7.901,
+        "swap_argmax": 4.419,
+        "swap_mass": 7.373,
+        "delta_argmax": -0.102,
+        "delta_mass": -0.528
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.119,
+        "base_mass": 0.231,
+        "swap_argmax": 0.125,
+        "swap_mass": 0.23,
+        "delta_argmax": 0.006,
+        "delta_mass": -0.001
+      },
+      {
+        "key": 2,
+        "base_argmax": 0.14,
+        "base_mass": 0.247,
+        "swap_argmax": 0.11,
+        "swap_mass": 0.234,
+        "delta_argmax": -0.03,
+        "delta_mass": -0.013
+      },
+      {
+        "key": 3,
+        "base_argmax": 0.194,
+        "base_mass": 0.336,
+        "swap_argmax": 0.175,
+        "swap_mass": 0.307,
+        "delta_argmax": -0.019,
+        "delta_mass": -0.029
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.321,
+        "base_mass": 0.372,
+        "swap_argmax": 0.328,
+        "swap_mass": 0.387,
+        "delta_argmax": 0.007,
+        "delta_mass": 0.015
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.149,
+        "base_mass": 0.222,
+        "swap_argmax": 0.137,
+        "swap_mass": 0.217,
+        "delta_argmax": -0.012,
+        "delta_mass": -0.005
+      }
+    ],
+    "model": "EleutherAI/pythia-160m"
+  },
+  {
+    "experiment": "swap@9",
+    "swap_pos": 9,
+    "original_token": " of",
+    "original_token_id": 273,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 4.521,
+        "base_mass": 7.901,
+        "swap_argmax": 4.46,
+        "swap_mass": 7.812,
+        "delta_argmax": -0.061,
+        "delta_mass": -0.089
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.119,
+        "base_mass": 0.231,
+        "swap_argmax": 0.121,
+        "swap_mass": 0.227,
+        "delta_argmax": 0.002,
+        "delta_mass": -0.004
+      },
+      {
+        "key": 4,
+        "base_argmax": 0.321,
+        "base_mass": 0.372,
+        "swap_argmax": 0.309,
+        "swap_mass": 0.366,
+        "delta_argmax": -0.012,
+        "delta_mass": -0.006
+      },
+      {
+        "key": 5,
+        "base_argmax": 0.149,
+        "base_mass": 0.222,
+        "swap_argmax": 0.142,
+        "swap_mass": 0.218,
+        "delta_argmax": -0.007,
+        "delta_mass": -0.004
+      },
+      {
+        "key": 6,
+        "base_argmax": 0.106,
+        "base_mass": 0.185,
+        "swap_argmax": 0.1,
+        "swap_mass": 0.178,
+        "delta_argmax": -0.006,
+        "delta_mass": -0.007
+      },
+      {
+        "key": 7,
+        "base_argmax": 0.113,
+        "base_mass": 0.164,
+        "swap_argmax": 0.102,
+        "swap_mass": 0.146,
+        "delta_argmax": -0.011,
+        "delta_mass": -0.018
+      },
+      {
+        "key": 8,
+        "base_argmax": 0.179,
+        "base_mass": 0.281,
+        "swap_argmax": 0.19,
+        "swap_mass": 0.285,
+        "delta_argmax": 0.011,
+        "delta_mass": 0.004
+      },
+      {
+        "key": 9,
+        "base_argmax": 0.138,
+        "base_mass": 0.28,
+        "swap_argmax": 0.593,
+        "swap_mass": 0.604,
+        "delta_argmax": 0.455,
+        "delta_mass": 0.324
+      },
+      {
+        "key": 10,
+        "base_argmax": 0.151,
+        "base_mass": 0.236,
+        "swap_argmax": 0.115,
+        "swap_mass": 0.18,
+        "delta_argmax": -0.036,
+        "delta_mass": -0.056
+      },
+      {
+        "key": 11,
+        "base_argmax": 45.38,
+        "base_mass": 31.956,
+        "swap_argmax": 45.039,
+        "swap_mass": 31.703,
+        "delta_argmax": -0.341,
+        "delta_mass": -0.253
+      },
+      {
+        "key": 12,
+        "base_argmax": 0.183,
+        "base_mass": 0.225,
+        "swap_argmax": 0.164,
+        "swap_mass": 0.231,
+        "delta_argmax": -0.019,
+        "delta_mass": 0.006
+      },
+      {
+        "key": 13,
+        "base_argmax": 0.109,
+        "base_mass": 0.185,
+        "swap_argmax": 0.127,
+        "swap_mass": 0.2,
+        "delta_argmax": 0.018,
+        "delta_mass": 0.015
+      },
+      {
+        "key": 14,
+        "base_argmax": 0.099,
+        "base_mass": 0.182,
+        "swap_argmax": 0.106,
+        "swap_mass": 0.199,
+        "delta_argmax": 0.007,
+        "delta_mass": 0.017
+      }
+    ],
+    "model": "EleutherAI/pythia-160m"
+  },
+  {
+    "experiment": "swap@50",
+    "swap_pos": 50,
+    "original_token": " each",
+    "original_token_id": 1016,
+    "neutral_token_id": 5000,
+    "rows": [
+      {
+        "key": 0,
+        "base_argmax": 4.521,
+        "base_mass": 7.901,
+        "swap_argmax": 4.544,
+        "swap_mass": 7.911,
+        "delta_argmax": 0.023,
+        "delta_mass": 0.01
+      },
+      {
+        "key": 1,
+        "base_argmax": 0.119,
+        "base_mass": 0.231,
+        "swap_argmax": 0.121,
+        "swap_mass": 0.231,
+        "delta_argmax": 0.002,
+        "delta_mass": 0.0
+      },
+      {
+        "key": 45,
+        "base_argmax": 0.133,
+        "base_mass": 0.188,
+        "swap_argmax": 0.134,
+        "swap_mass": 0.183,
+        "delta_argmax": 0.001,
+        "delta_mass": -0.005
+      },
+      {
+        "key": 46,
+        "base_argmax": 0.132,
+        "base_mass": 0.181,
+        "swap_argmax": 0.133,
+        "swap_mass": 0.178,
+        "delta_argmax": 0.001,
+        "delta_mass": -0.003
+      },
+      {
+        "key": 47,
+        "base_argmax": 0.125,
+        "base_mass": 0.168,
+        "swap_argmax": 0.121,
+        "swap_mass": 0.168,
+        "delta_argmax": -0.004,
+        "delta_mass": 0.0
+      },
+      {
+        "key": 48,
+        "base_argmax": 0.13,
+        "base_mass": 0.157,
+        "swap_argmax": 0.119,
+        "swap_mass": 0.147,
+        "delta_argmax": -0.011,
+        "delta_mass": -0.01
+      },
+      {
+        "key": 49,
+        "base_argmax": 0.149,
+        "base_mass": 0.215,
+        "swap_argmax": 0.138,
+        "swap_mass": 0.209,
+        "delta_argmax": -0.011,
+        "delta_mass": -0.006
+      },
+      {
+        "key": 50,
+        "base_argmax": 0.151,
+        "base_mass": 0.178,
+        "swap_argmax": 0.845,
+        "swap_mass": 0.862,
+        "delta_argmax": 0.694,
+        "delta_mass": 0.684
+      },
+      {
+        "key": 51,
+        "base_argmax": 0.14,
+        "base_mass": 0.174,
+        "swap_argmax": 0.075,
+        "swap_mass": 0.118,
+        "delta_argmax": -0.065,
+        "delta_mass": -0.056
+      },
+      {
+        "key": 52,
+        "base_argmax": 0.061,
+        "base_mass": 0.09,
+        "swap_argmax": 0.075,
+        "swap_mass": 0.094,
+        "delta_argmax": 0.014,
+        "delta_mass": 0.004
+      },
+      {
+        "key": 53,
+        "base_argmax": 0.21,
+        "base_mass": 0.245,
+        "swap_argmax": 0.243,
+        "swap_mass": 0.259,
+        "delta_argmax": 0.033,
+        "delta_mass": 0.014
+      },
+      {
+        "key": 54,
+        "base_argmax": 0.21,
+        "base_mass": 0.29,
+        "swap_argmax": 0.142,
+        "swap_mass": 0.208,
+        "delta_argmax": -0.068,
+        "delta_mass": -0.082
+      },
+      {
+        "key": 55,
+        "base_argmax": 0.11,
+        "base_mass": 0.152,
+        "swap_argmax": 0.117,
+        "swap_mass": 0.179,
+        "delta_argmax": 0.007,
+        "delta_mass": 0.027
+      }
+    ],
+    "model": "EleutherAI/pythia-160m"
+  },
+  {
+    "experiment": "length_sweep",
+    "rows": [
+      {
+        "seq_len": 32,
+        "argmax_pct_key0": 28.082,
+        "mass_pct_key0": 30.703
+      },
+      {
+        "seq_len": 128,
+        "argmax_pct_key0": 10.221,
+        "mass_pct_key0": 14.603
+      },
+      {
+        "seq_len": 512,
+        "argmax_pct_key0": 4.521,
+        "mass_pct_key0": 7.901
+      },
+      {
+        "seq_len": 1024,
+        "argmax_pct_key0": 3.215,
+        "mass_pct_key0": 5.623
+      },
+      {
+        "seq_len": 2048,
+        "argmax_pct_key0": 2.797,
+        "mass_pct_key0": 4.337
+      }
+    ],
+    "model": "EleutherAI/pythia-160m"
+  },
+  {
+    "experiment": "zero_pe",
+    "skipped": "no wpe module (not GPT-2 style)",
+    "model": "EleutherAI/pythia-160m"
+  }
+]
